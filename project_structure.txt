@@ -1,0 +1,37 @@
+moex_crypto_backtest/
+├── src/
+│   ├── __init__.py
+│   ├── config/
+│   │   ├── __init__.py
+│   │   ├── settings.py
+│   │   └── logging_config.py
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── moex_client.py
+│   │   └── crypto_client.py
+│   ├── patterns/
+│   │   ├── __init__.py
+│   │   └── pattern_detector.py
+│   ├── backtest/
+│   │   ├── __init__.py
+│   │   ├── engine.py
+│   │   └── metrics.py
+│   ├── visualization/
+│   │   ├── __init__.py
+│   │   ├── chart_builder.py
+│   │   └── markers.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── logger.py
+│   │   └── file_handler.py
+│   └── gui/
+│       ├── __init__.py
+│       └── main_window.py
+├── logs/
+│   ├── error.log
+│   ├── user.log
+│   └── app.log
+├── results/
+├── requirements.txt
+├── main.py
+└── README.md

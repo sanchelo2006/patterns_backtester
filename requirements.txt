@@ -1,0 +1,11 @@
+apimoex
+pybit
+TA-Lib
+pandas
+numpy
+plotly
+openpyxl
+PyQt5
+PyQt5-Qt5
+PyQt5-sip
+python-dotenv
