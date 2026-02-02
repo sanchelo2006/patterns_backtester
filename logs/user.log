@@ -1,7 +1,1 @@
-2026-01-28 22:42:58 - user - INFO - USER ACTION: Fetch data - Details: {'market': 'MOEX', 'ticker': 'SBER', 'start_date': '2025-01-28', 'end_date': '2026-01-28'}
-2026-01-28 22:43:11 - user - INFO - USER ACTION: Fetch data - Details: {'market': 'MOEX', 'ticker': 'SBER', 'start_date': '2025-01-28', 'end_date': '2026-01-28'}
-2026-01-29 13:33:35 - user - INFO - USER ACTION: Fetch data - Details: {'market': 'MOEX', 'ticker': 'SBER', 'start_date': '2025-01-29', 'end_date': '2026-01-29'}
-2026-01-29 13:33:41 - user - INFO - USER ACTION: Run backtest - Details: {'patterns_count': 60, 'threshold': 0.5, 'initial_capital': 1000000.0, 'position_size': 10.0}
-2026-01-29 13:34:18 - user - INFO - USER ACTION: Create chart
-2026-01-29 13:35:09 - user - INFO - USER ACTION: Run backtest - Details: {'patterns_count': 60, 'threshold': 0.5, 'initial_capital': 100000.0, 'position_size': 10.0}
-2026-01-29 13:35:37 - user - INFO - USER ACTION: Save results
+2026-02-02 11:20:01 - user - INFO - USER ACTION: Show interactive chart

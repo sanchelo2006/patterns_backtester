@@ -4,20 +4,27 @@ moex_crypto_backtest/
 │   ├── config/
 │   │   ├── __init__.py
 │   │   ├── settings.py
-│   │   └── logging_config.py
+│   │   └── database.py
 │   ├── data/
 │   │   ├── __init__.py
 │   │   ├── moex_client.py
 │   │   └── crypto_client.py
 │   ├── patterns/
 │   │   ├── __init__.py
-│   │   └── pattern_detector.py
+│   │   ├── pattern_detector.py
+│   │   └── pattern_db.py
+│   ├── strategies/
+│   │   ├── __init__.py
+│   │   ├── strategy_builder.py
+│   │   ├── entry_rules.py
+│   │   └── exit_rules.py
 │   ├── backtest/
 │   │   ├── __init__.py
 │   │   ├── engine.py
 │   │   └── metrics.py
 │   ├── visualization/
 │   │   ├── __init__.py
+│   │   ├── chart_window.py
 │   │   ├── chart_builder.py
 │   │   └── markers.py
 │   ├── utils/
@@ -27,11 +34,9 @@ moex_crypto_backtest/
 │   └── gui/
 │       ├── __init__.py
 │       └── main_window.py
+├── database/
+│   └── strategies.db
 ├── logs/
-│   ├── error.log
-│   ├── user.log
-│   └── app.log
 ├── results/
-├── requirements.txt
 ├── main.py
-└── README.md
+└── requirements.txt

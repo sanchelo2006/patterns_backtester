@@ -1,0 +1,144 @@
+{
+    "copy-project-context.filePathsToContext": [
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/engine.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/engine.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/engine.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/logging_config.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/logging_config.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/logging_config.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/settings.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/settings.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/settings.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/help_window.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/help_window.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/help_window.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/patterns/pattern_detector.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/patterns/pattern_detector.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/patterns/pattern_detector.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/entry_rules.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/entry_rules.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/entry_rules.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/exit_rules.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/exit_rules.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/exit_rules.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/strategy_builder.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/strategy_builder.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/strategies/strategy_builder.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/main.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/main.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/main.py",
+            "scheme": "file"
+        }
+    ]
+}

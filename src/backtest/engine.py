@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from src.strategies.entry_rules import EntryRule, EntryRuleExecutor
+from src.strategies.exit_rules import ExitRule, ExitRuleExecutor, ExitSignal
 from src.utils.logger import get_logger
 
 logger = get_logger('app')
@@ -19,7 +22,26 @@ class Trade:
     pnl: float
     pnl_percent: float
     pattern: str
+    exit_reason: str
     success: bool
+    invested_capital: float  # How much capital was used for this trade
+
+    def to_dict(self):
+        """Convert to dictionary for serialization"""
+        return {
+            'entry_date': self.entry_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'exit_date': self.exit_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'entry_price': float(self.entry_price),
+            'exit_price': float(self.exit_price),
+            'position_type': self.position_type,
+            'quantity': float(self.quantity),
+            'pnl': float(self.pnl),
+            'pnl_percent': float(self.pnl_percent),
+            'pattern': self.pattern,
+            'exit_reason': self.exit_reason,
+            'success': bool(self.success),
+            'invested_capital': float(self.invested_capital)
+        }
 
 
 class BacktestEngine:
@@ -29,74 +51,121 @@ class BacktestEngine:
         self,
         initial_capital: float = 1000000,
         position_size_pct: float = 10,
-        commission: float = 0.001
+        commission: float = 0.001,
+        slippage: float = 0.001
     ):
         self.initial_capital = initial_capital
         self.position_size_pct = position_size_pct
         self.commission = commission
-        self.capital = initial_capital
+        self.slippage = slippage
+        self.reset()
+
+    def reset(self):
+        """Reset engine state"""
+        self.capital = self.initial_capital  # Available capital
         self.trades: List[Trade] = []
         self.equity_curve = []
         self.position = None
+        self.max_drawdown = 0
+        self.peak_equity = self.initial_capital
+        self.current_equity = self.initial_capital
+        self.invested_capital = 0  # Capital currently invested in open position
 
     def run(
         self,
         df: pd.DataFrame,
-        patterns_to_use: List[str]
+        patterns_to_use: List[str],
+        entry_rule: EntryRule,
+        exit_rule: ExitRule,
+        entry_params: Dict = None,
+        exit_params: Dict = None
     ) -> Dict:
         """Run backtest on the provided data"""
         logger.info(f"Starting backtest with {len(df)} bars")
 
-        self.capital = self.initial_capital
-        self.trades = []
-        self.equity_curve = []
-        self.position = None
+        self.reset()
+        entry_executor = EntryRuleExecutor()
+        exit_executor = ExitRuleExecutor(exit_rule, exit_params)
 
-        # Add required columns if they don't exist
-        for col in ['signal', 'pattern_name']:
-            if col not in df.columns:
-                df[col] = 0 if col == 'signal' else ''
+        # Add required columns
+        df = df.copy()
+        if 'signal' not in df.columns:
+            df['signal'] = 0
+        if 'pattern_name' not in df.columns:
+            df['pattern_name'] = ''
 
-        # Detect patterns and generate signals
         for i in range(1, len(df)):
             current_bar = df.iloc[i]
-            prev_bar = df.iloc[i-1]
+            current_date = df.index[i]
 
-            # Get signal from pattern detector
-            signal, pattern_name = self._get_signal(prev_bar, patterns_to_use)
-
-            df.at[df.index[i], 'signal'] = signal
-            df.at[df.index[i], 'pattern_name'] = pattern_name
+            # Get signal from pattern
+            signal, pattern_name = self._get_signal(df.iloc[i-1], patterns_to_use)
+            df.at[current_date, 'signal'] = signal
+            df.at[current_date, 'pattern_name'] = pattern_name
 
             # Check for exit conditions
             if self.position:
-                self._check_exit(current_bar, df.index[i])
+                bars_since_entry = (current_date - self.position['entry_date']).days
+
+                exit_signal = exit_executor.check_exit(
+                    entry_price=self.position['entry_price'],
+                    current_price=current_bar['Close'],
+                    position_type=self.position['position_type'],
+                    bars_since_entry=bars_since_entry,
+                    pattern_data={'pattern_name': pattern_name, 'has_opposite_pattern': signal != 0},
+                    current_bar=current_bar.to_dict()
+                )
+
+                if exit_signal.should_exit:
+                    self._exit_trade(
+                        date=current_date,
+                        price=exit_signal.exit_price or current_bar['Close'],
+                        exit_reason=exit_signal.reason
+                    )
 
             # Check for entry conditions
             if signal != 0 and not self.position:
+                pattern_data = {
+                    'pattern_name': pattern_name,
+                    'pattern_high': df.iloc[i-1]['High'],
+                    'pattern_low': df.iloc[i-1]['Low'],
+                    'pattern_close': df.iloc[i-1]['Close']
+                }
+
+                entry_price = entry_executor.execute(
+                    rule=entry_rule,
+                    pattern_data=pattern_data,
+                    current_price=current_bar['Open'],
+                    params=entry_params
+                )
+
                 self._enter_trade(
-                    df.index[i],
-                    current_bar['Close'],
-                    signal,
-                    pattern_name
+                    date=current_date,
+                    price=entry_price,
+                    signal=signal,
+                    pattern_name=pattern_name
                 )
 
             # Update equity curve
+            self._update_equity(current_bar['Close'])
             self.equity_curve.append({
-                'date': df.index[i],
-                'equity': self._calculate_equity(current_bar['Close'])
+                'date': current_date,
+                'equity': self.current_equity,
+                'drawdown': self.max_drawdown,
+                'available_capital': self.capital,
+                'invested_capital': self.invested_capital
             })
 
         # Close any open position at the end
         if self.position:
             self._exit_trade(
-                df.index[-1],
-                df.iloc[-1]['Close'],
-                'end_of_data'
+                date=df.index[-1],
+                price=df.iloc[-1]['Close'],
+                exit_reason='end_of_data'
             )
 
         # Calculate metrics
-        metrics = self._calculate_metrics(df)
+        metrics = self._calculate_metrics()
 
         logger.info(f"Backtest completed. {len(self.trades)} trades executed")
         return {
@@ -121,147 +190,202 @@ class BacktestEngine:
         date: pd.Timestamp,
         price: float,
         signal: int,
-        pattern: str
+        pattern_name: str
     ):
         """Enter a new trade"""
         position_type = 'long' if signal > 0 else 'short'
 
-        # Calculate position size
+        # Apply slippage
+        if position_type == 'long':
+            entry_price = price * (1 + self.slippage)
+        else:  # short
+            entry_price = price * (1 - self.slippage)
+
+        # Calculate position size (based on available capital)
         position_value = self.capital * (self.position_size_pct / 100)
-        quantity = position_value / price
+        quantity = position_value / entry_price
+
+        # Check if we have enough capital
+        if position_value > self.capital:
+            logger.warning(f"Insufficient capital for trade. Need: {position_value}, Have: {self.capital}")
+            return
 
         self.position = {
             'entry_date': date,
-            'entry_price': price,
+            'entry_price': entry_price,
             'position_type': position_type,
             'quantity': quantity,
-            'pattern': pattern
+            'pattern': pattern_name,
+            'invested_capital': position_value  # Store invested capital
         }
 
-        # Apply commission
-        self.capital -= position_value * self.commission
+        # Deduct position value from available capital
+        self.capital -= position_value
+        self.invested_capital = position_value
 
-        logger.debug(f"Entered {position_type} trade at {price} on {date}")
+        # Apply commission (on the position value)
+        commission_cost = position_value * self.commission
+        self.capital -= commission_cost
 
-    def _check_exit(self, current_bar: pd.Series, date: pd.Timestamp):
-        """Check exit conditions"""
-        if not self.position:
-            return
+        logger.debug(f"Entered {position_type} trade at {entry_price:.2f} on {date}, Invested: {position_value:.2f}")
 
-        current_price = current_bar['Close']
-        entry_price = self.position['entry_price']
-
-        # Calculate profit/loss
-        if self.position['position_type'] == 'long':
-            pl = (current_price - entry_price) * self.position['quantity']
-        else:  # short
-            pl = (entry_price - current_price) * self.position['quantity']
-
-        pl_pct = pl / (entry_price * self.position['quantity']) * 100
-
-        # Exit conditions (simplified - could add stop loss/take profit)
-        # For now, exit on opposite signal or after 20 bars
-        days_in_trade = (date - self.position['entry_date']).days
-
-        if days_in_trade >= 20:
-            self._exit_trade(date, current_price, 'time_exit', pl, pl_pct)
-
-    def _exit_trade(
-        self,
-        date: pd.Timestamp,
-        price: float,
-        exit_reason: str,
-        pl: Optional[float] = None,
-        pl_pct: Optional[float] = None
-    ):
+    def _exit_trade(self, date: pd.Timestamp, price: float, exit_reason: str):
         """Exit current trade"""
         if not self.position:
             return
 
-        # Calculate P&L if not provided
-        if pl is None:
-            entry_price = self.position['entry_price']
-            quantity = self.position['quantity']
+        entry_price = self.position['entry_price']
+        quantity = self.position['quantity']
+        position_type = self.position['position_type']
+        invested_capital = self.position['invested_capital']
 
-            if self.position['position_type'] == 'long':
-                pl = (price - entry_price) * quantity
-            else:  # short
-                pl = (entry_price - price) * quantity
+        # Apply slippage
+        if position_type == 'long':
+            exit_price = price * (1 - self.slippage)
+        else:  # short
+            exit_price = price * (1 + self.slippage)
 
-            pl_pct = pl / (entry_price * quantity) * 100
+        # Calculate P&L
+        if position_type == 'long':
+            pl = (exit_price - entry_price) * quantity
+        else:  # short
+            pl = (entry_price - exit_price) * quantity
+
+        pl_pct = (pl / invested_capital) * 100 if invested_capital > 0 else 0
 
         # Create trade record
         trade = Trade(
             entry_date=self.position['entry_date'],
             exit_date=date,
-            entry_price=self.position['entry_price'],
-            exit_price=price,
-            position_type=self.position['position_type'],
-            quantity=self.position['quantity'],
+            entry_price=entry_price,
+            exit_price=exit_price,
+            position_type=position_type,
+            quantity=quantity,
             pnl=pl,
             pnl_percent=pl_pct,
             pattern=self.position['pattern'],
-            success=pl > 0
+            exit_reason=exit_reason,
+            success=pl > 0,
+            invested_capital=invested_capital
         )
 
         self.trades.append(trade)
 
-        # Update capital
-        self.capital += self.position['entry_price'] * self.position['quantity'] + pl
-        self.capital -= self.position['entry_price'] * self.position['quantity'] * self.commission
+        # Return invested capital + P&L to available capital
+        self.capital += invested_capital + pl
 
-        logger.debug(f"Exited {self.position['position_type']} trade. P&L: {pl:.2f}")
+        # Apply exit commission (on the exit value)
+        exit_value = exit_price * quantity
+        commission_cost = exit_value * self.commission
+        self.capital -= commission_cost
+
+        # Reset position tracking
         self.position = None
+        self.invested_capital = 0
 
-    def _calculate_equity(self, current_price: float) -> float:
-        """Calculate current equity"""
+        logger.debug(f"Exited {position_type} trade. P&L: {pl:.2f} ({pl_pct:.2f}%), Reason: {exit_reason}")
+
+    def _update_equity(self, current_price: float):
+        """Update current equity value"""
         if not self.position:
-            return self.capital
+            # No position, equity = available capital
+            self.current_equity = self.capital
+        else:
+            entry_price = self.position['entry_price']
+            quantity = self.position['quantity']
+            position_type = self.position['position_type']
+            invested_capital = self.position['invested_capital']
 
-        entry_price = self.position['entry_price']
-        quantity = self.position['quantity']
+            # Calculate unrealized P&L
+            if position_type == 'long':
+                unrealized_pl = (current_price - entry_price) * quantity
+            else:  # short
+                unrealized_pl = (entry_price - current_price) * quantity
 
-        if self.position['position_type'] == 'long':
-            position_value = current_price * quantity
-        else:  # short
-            # For short, value decreases as price goes down
-            price_diff = entry_price - current_price
-            position_value = entry_price * quantity + price_diff * quantity
+            # Equity = available capital + invested capital + unrealized P&L
+            self.current_equity = self.capital + invested_capital + unrealized_pl
 
-        return self.capital + position_value - (entry_price * quantity)
+        # Update max drawdown
+        if self.current_equity > self.peak_equity:
+            self.peak_equity = self.current_equity
 
-    def _calculate_metrics(self, df: pd.DataFrame) -> Dict:
-        """Calculate performance metrics"""
+        drawdown = (self.peak_equity - self.current_equity) / self.peak_equity * 100
+        if drawdown > self.max_drawdown:
+            self.max_drawdown = drawdown
+
+    def _calculate_metrics(self) -> Dict:
+        """Calculate comprehensive performance metrics"""
         if not self.trades:
-            return {}
+            return {
+                'initial_capital': self.initial_capital,
+                'final_capital': self.capital,
+                'total_return_pct': 0,
+                'total_trades': 0,
+                'winning_trades': 0,
+                'losing_trades': 0,
+                'win_rate': 0,
+                'total_pnl': 0,
+                'avg_win': 0,
+                'avg_loss': 0,
+                'profit_factor': 0,
+                'sharpe_ratio': 0,
+                'max_drawdown': self.max_drawdown,
+                'avg_trade_duration': pd.Timedelta(0),
+                'total_invested': 0
+            }
 
-        trades_df = pd.DataFrame([t.__dict__ for t in self.trades])
+        trades_df = pd.DataFrame([t.to_dict() for t in self.trades])
+
+        # Convert string dates back to datetime for calculations
+        trades_df['entry_date'] = pd.to_datetime(trades_df['entry_date'])
+        trades_df['exit_date'] = pd.to_datetime(trades_df['exit_date'])
 
         # Basic metrics
         total_trades = len(self.trades)
         winning_trades = len(trades_df[trades_df['success'] == True])
         losing_trades = len(trades_df[trades_df['success'] == False])
 
-        win_rate = winning_trades / total_trades if total_trades > 0 else 0
+        win_rate = winning_trades / total_trades * 100 if total_trades > 0 else 0
 
         total_pnl = trades_df['pnl'].sum()
-        total_return_pct = (self.capital - self.initial_capital) / self.initial_capital * 100
+        total_return_pct = ((self.capital - self.initial_capital) / self.initial_capital) * 100
+
+        # Calculate average invested capital per trade
+        avg_invested = trades_df['invested_capital'].mean()
+        total_invested = trades_df['invested_capital'].sum()
 
         avg_win = trades_df[trades_df['success'] == True]['pnl'].mean() if winning_trades > 0 else 0
         avg_loss = trades_df[trades_df['success'] == False]['pnl'].mean() if losing_trades > 0 else 0
 
-        profit_factor = abs(avg_win * winning_trades) / abs(avg_loss * losing_trades) if losing_trades > 0 else float('inf')
+        total_win = trades_df[trades_df['success'] == True]['pnl'].sum()
+        total_loss = abs(trades_df[trades_df['success'] == False]['pnl'].sum())
+        profit_factor = total_win / total_loss if total_loss > 0 else float('inf')
 
-        # Sharpe ratio (simplified)
+        # Sharpe ratio
         equity_series = pd.Series([e['equity'] for e in self.equity_curve])
-        returns = equity_series.pct_change().dropna()
-        sharpe_ratio = returns.mean() / returns.std() * np.sqrt(252) if len(returns) > 1 and returns.std() != 0 else 0
+        if len(equity_series) > 1:
+            returns = equity_series.pct_change().dropna()
+            if returns.std() > 0:
+                sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(252)
+            else:
+                sharpe_ratio = 0
+        else:
+            sharpe_ratio = 0
 
-        # Maximum drawdown
-        equity_df = pd.DataFrame(self.equity_curve)
-        equity_df['peak'] = equity_df['equity'].cummax()
-        equity_df['drawdown'] = (equity_df['equity'] - equity_df['peak']) / equity_df['peak'] * 100
-        max_drawdown = equity_df['drawdown'].min()
+        # Trade duration
+        avg_duration = (trades_df['exit_date'] - trades_df['entry_date']).mean()
+
+        # Additional metrics
+        max_win = trades_df[trades_df['success'] == True]['pnl'].max() if winning_trades > 0 else 0
+        max_loss = trades_df[trades_df['success'] == False]['pnl'].min() if losing_trades > 0 else 0
+
+        # Calculate consecutive wins/losses
+        trades_df['result_seq'] = trades_df['success'].astype(int).diff().fillna(0).cumsum()
+        consecutive_wins = trades_df.groupby('result_seq')['success'].sum().max()
+        consecutive_losses = (-trades_df.groupby('result_seq')['success'].sum().min()) if losing_trades > 0 else 0
+
+        # Calculate return on invested capital
+        avg_roi_per_trade = (trades_df['pnl'] / trades_df['invested_capital'] * 100).mean()
 
         metrics = {
             'initial_capital': self.initial_capital,
@@ -276,8 +400,29 @@ class BacktestEngine:
             'avg_loss': avg_loss,
             'profit_factor': profit_factor,
             'sharpe_ratio': sharpe_ratio,
-            'max_drawdown': max_drawdown,
-            'avg_trade_duration': trades_df['exit_date'] - trades_df['entry_date']
+            'max_drawdown': self.max_drawdown,
+            'avg_trade_duration': avg_duration,
+            'max_win': max_win,
+            'max_loss': max_loss,
+            'consecutive_wins': consecutive_wins,
+            'consecutive_losses': consecutive_losses,
+            'long_trades': len(trades_df[trades_df['position_type'] == 'long']),
+            'short_trades': len(trades_df[trades_df['position_type'] == 'short']),
+            'avg_pnl_per_trade': trades_df['pnl'].mean(),
+            'std_pnl': trades_df['pnl'].std(),
+            'total_invested': total_invested,
+            'avg_invested_per_trade': avg_invested,
+            'avg_roi_per_trade': avg_roi_per_trade
         }
+
+        # Add pattern statistics
+        pattern_stats = trades_df.groupby('pattern').agg({
+            'pnl': ['count', 'sum', 'mean'],
+            'pnl_percent': 'mean',
+            'success': 'mean',
+            'invested_capital': 'mean'
+        }).round(2)
+
+        metrics['pattern_statistics'] = pattern_stats.to_dict()
 
         return metrics

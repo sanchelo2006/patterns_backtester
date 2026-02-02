@@ -1,0 +1,116 @@
+2026-01-29 19:51:35 - error - ERROR - ERROR: show_interactive_chart: name 'QWebEngineView' is not defined
+Traceback (most recent call last):
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py", line 755, in show_interactive_chart
+    self.chart_window = InteractiveChartWindow(self)
+                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 35, in __init__
+    self.init_ui()
+    ~~~~~~~~~~~~^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 48, in init_ui
+    self.web_view = QWebEngineView()
+                    ^^^^^^^^^^^^^^
+NameError: name 'QWebEngineView' is not defined
+2026-01-30 15:41:16 - error - ERROR - ERROR: show_interactive_chart: make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`
+Traceback (most recent call last):
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py", line 809, in show_interactive_chart
+    self.chart_window.set_data(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.backtest_results['df'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.backtest_results['trades'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        title
+        ^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 161, in set_data
+    self.update_chart()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 250, in update_chart
+    mpf.plot(
+    ~~~~~~~~^
+        plot_df,
+        ^^^^^^^^
+    ...<14 lines>...
+        xrotation=45
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/plotting.py", line 429, in plot
+    external_axes_mode = _check_for_external_axes(config)
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/_arg_validators.py", line 446, in _check_for_external_axes
+    raise ValueError('make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`')
+ValueError: make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`
+2026-01-30 17:13:05 - error - ERROR - ERROR: show_interactive_chart: make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`
+Traceback (most recent call last):
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py", line 809, in show_interactive_chart
+    self.chart_window.set_data(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.backtest_results['df'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.backtest_results['trades'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        title
+        ^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 161, in set_data
+    self.update_chart()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 250, in update_chart
+    mpf.plot(
+    ~~~~~~~~^
+        plot_df,
+        ^^^^^^^^
+    ...<14 lines>...
+        xrotation=45
+        ^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/plotting.py", line 429, in plot
+    external_axes_mode = _check_for_external_axes(config)
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/_arg_validators.py", line 446, in _check_for_external_axes
+    raise ValueError('make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`')
+ValueError: make_addplot() `ax` kwargs must all be of type `matplotlib.axis.Axes`
+2026-02-01 22:42:11 - error - ERROR - ERROR: show_interactive_chart: name 'mdates' is not defined
+Traceback (most recent call last):
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 241, in update_chart
+    mpf.plot(
+    ~~~~~~~~^
+        plot_df,
+        ^^^^^^^^
+    ...<16 lines>...
+        scale_padding={'left': 0.1, 'right': 0.1, 'top': 0.1, 'bottom': 0.1}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/plotting.py", line 412, in plot
+    config = _process_kwargs(kwargs, _valid_plot_kwargs())
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/.venv/lib/python3.13/site-packages/mplfinance/_arg_validators.py", line 339, in _process_kwargs
+    raise KeyError('Unrecognized kwarg="'+str(key)+'"')
+KeyError: 'Unrecognized kwarg="fig"'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/main_window.py", line 820, in show_interactive_chart
+    self.chart_window.set_data(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.backtest_results['df'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.backtest_results['trades'],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        title
+        ^^^^^
+    )
+    ^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 150, in set_data
+    self.update_chart()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 269, in update_chart
+    self.fallback_plot(plot_df)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py", line 404, in fallback_plot
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+                                 ^^^^^^
+NameError: name 'mdates' is not defined

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Main application entry point"""
+
 import sys
 import os
 from pathlib import Path
@@ -7,6 +10,7 @@ src_path = Path(__file__).parent / 'src'
 sys.path.append(str(src_path))
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
 from src.gui.main_window import BacktestApp
 from src.utils.logger import log_app_info
 
@@ -15,6 +19,10 @@ def main():
     """Main application entry point"""
     try:
         log_app_info("Starting application...")
+
+        # Enable high DPI scaling
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
         app = QApplication(sys.argv)
         app.setStyle('Fusion')

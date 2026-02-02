@@ -1,0 +1,551 @@
+{
+  "CDL2CROWS": {
+    "description": "CDL2CROWS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 3
+  },
+  "CDL3BLACKCROWS": {
+    "description": "CDL3BLACKCROWS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 3
+  },
+  "CDL3INSIDE": {
+    "description": "CDL3INSIDE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDL3LINESTRIKE": {
+    "description": "CDL3LINESTRIKE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDL3OUTSIDE": {
+    "description": "CDL3OUTSIDE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDL3STARSINSOUTH": {
+    "description": "CDL3STARSINSOUTH: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 3
+  },
+  "CDL3WHITESOLDIERS": {
+    "description": "CDL3WHITESOLDIERS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bullish",
+    "components": 3
+  },
+  "CDLABANDONEDBABY": {
+    "description": "CDLABANDONEDBABY: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLADVANCEBLOCK": {
+    "description": "CDLADVANCEBLOCK: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLBELTHOLD": {
+    "description": "CDLBELTHOLD: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLBREAKAWAY": {
+    "description": "CDLBREAKAWAY: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLCLOSINGMARUBOZU": {
+    "description": "CDLCLOSINGMARUBOZU: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Momentum",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLCONCEALBABYSWALL": {
+    "description": "CDLCONCEALBABYSWALL: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLCOUNTERATTACK": {
+    "description": "CDLCOUNTERATTACK: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLDARKCLOUDCOVER": {
+    "description": "CDLDARKCLOUDCOVER: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLDOJI": {
+    "description": "CDLDOJI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLDOJISTAR": {
+    "description": "CDLDOJISTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLDRAGONFLYDOJI": {
+    "description": "CDLDRAGONFLYDOJI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLENGULFING": {
+    "description": "CDLENGULFING: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 2
+  },
+  "CDLEVENINGDOJISTAR": {
+    "description": "CDLEVENINGDOJISTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLEVENINGSTAR": {
+    "description": "CDLEVENINGSTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 3
+  },
+  "CDLGAPSIDESIDEWHITE": {
+    "description": "CDLGAPSIDESIDEWHITE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLGRAVESTONEDOJI": {
+    "description": "CDLGRAVESTONEDOJI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLHAMMER": {
+    "description": "CDLHAMMER: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bullish",
+    "components": 1
+  },
+  "CDLHANGINGMAN": {
+    "description": "CDLHANGINGMAN: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 1
+  },
+  "CDLHARAMI": {
+    "description": "CDLHARAMI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 2
+  },
+  "CDLHARAMICROSS": {
+    "description": "CDLHARAMICROSS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 2
+  },
+  "CDLHIGHWAVE": {
+    "description": "CDLHIGHWAVE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLHIKKAKE": {
+    "description": "CDLHIKKAKE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLHIKKAKEMOD": {
+    "description": "CDLHIKKAKEMOD: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLHOMINGPIGEON": {
+    "description": "CDLHOMINGPIGEON: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLIDENTICAL3CROWS": {
+    "description": "CDLIDENTICAL3CROWS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 3
+  },
+  "CDLINNECK": {
+    "description": "CDLINNECK: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLINVERTEDHAMMER": {
+    "description": "CDLINVERTEDHAMMER: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLKICKING": {
+    "description": "CDLKICKING: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLKICKINGBYLENGTH": {
+    "description": "CDLKICKINGBYLENGTH: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLLADDERBOTTOM": {
+    "description": "CDLLADDERBOTTOM: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLLONGLEGGEDDOJI": {
+    "description": "CDLLONGLEGGEDDOJI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLLONGLINE": {
+    "description": "CDLLONGLINE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLMARUBOZU": {
+    "description": "CDLMARUBOZU: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Momentum",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLMATCHINGLOW": {
+    "description": "CDLMATCHINGLOW: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLMATHOLD": {
+    "description": "CDLMATHOLD: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLMORNINGDOJISTAR": {
+    "description": "CDLMORNINGDOJISTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Indecision/Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Neutral",
+    "components": 1
+  },
+  "CDLMORNINGSTAR": {
+    "description": "CDLMORNINGSTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bullish",
+    "components": 3
+  },
+  "CDLONNECK": {
+    "description": "CDLONNECK: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLPIERCING": {
+    "description": "CDLPIERCING: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLRICKSHAWMAN": {
+    "description": "CDLRICKSHAWMAN: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLRISEFALL3METHODS": {
+    "description": "CDLRISEFALL3METHODS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLSEPARATINGLINES": {
+    "description": "CDLSEPARATINGLINES: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLSHOOTINGSTAR": {
+    "description": "CDLSHOOTINGSTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 3
+  },
+  "CDLSHORTLINE": {
+    "description": "CDLSHORTLINE: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLSPINNINGTOP": {
+    "description": "CDLSPINNINGTOP: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLSTALLEDPATTERN": {
+    "description": "CDLSTALLEDPATTERN: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLSTICKSANDWICH": {
+    "description": "CDLSTICKSANDWICH: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLTAKURI": {
+    "description": "CDLTAKURI: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLTASUKIGAP": {
+    "description": "CDLTASUKIGAP: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLTHRUSTING": {
+    "description": "CDLTHRUSTING: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLTRISTAR": {
+    "description": "CDLTRISTAR: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 3
+  },
+  "CDLUNIQUE3RIVER": {
+    "description": "CDLUNIQUE3RIVER: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  },
+  "CDLUPSIDEGAP2CROWS": {
+    "description": "CDLUPSIDEGAP2CROWS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Reversal",
+    "type": "Candlestick pattern",
+    "direction": "Bearish",
+    "components": 3
+  },
+  "CDLXSIDEGAP3METHODS": {
+    "description": "CDLXSIDEGAP3METHODS: Japanese candlestick pattern for technical analysis.",
+    "interpretation": "Trading signal based on price action analysis.",
+    "reliability": "Medium",
+    "category": "Technical",
+    "type": "Candlestick pattern",
+    "direction": "Both",
+    "components": 1
+  }
+}

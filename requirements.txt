@@ -9,3 +9,10 @@ PyQt5
 PyQt5-Qt5
 PyQt5-sip
 python-dotenv
+requests
+yfinance
+sqlalchemy
+XlsxWriter
+matplotlib
+mplfinance
+lightweight-charts

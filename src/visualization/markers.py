@@ -14,46 +14,55 @@ class MarkerType(Enum):
     EXIT_LOSS_SHORT = 'blue_square'              # Blue square
 
 
+# For matplotlib
 MARKER_CONFIGS = {
     MarkerType.ENTER_PROFIT_LONG: {
         'symbol': 'triangle-up',
         'color': 'green',
-        'size': 12
+        'size': 10,
+        'marker': '^'
     },
     MarkerType.EXIT_PROFIT_LONG: {
         'symbol': 'triangle-up',
         'color': 'red',
-        'size': 12
+        'size': 10,
+        'marker': '^'
     },
     MarkerType.ENTER_LOSS_LONG: {
         'symbol': 'triangle-down',
         'color': 'yellow',
-        'size': 12
+        'size': 10,
+        'marker': 'v'
     },
     MarkerType.EXIT_LOSS_LONG: {
         'symbol': 'triangle-down',
         'color': 'blue',
-        'size': 12
+        'size': 10,
+        'marker': 'v'
     },
     MarkerType.ENTER_PROFIT_SHORT: {
         'symbol': 'square',
         'color': 'red',
-        'size': 10
+        'size': 8,
+        'marker': 's'
     },
     MarkerType.EXIT_PROFIT_SHORT: {
         'symbol': 'square',
         'color': 'green',
-        'size': 10
+        'size': 8,
+        'marker': 's'
     },
     MarkerType.ENTER_LOSS_SHORT: {
         'symbol': 'square',
         'color': 'yellow',
-        'size': 10
+        'size': 8,
+        'marker': 's'
     },
     MarkerType.EXIT_LOSS_SHORT: {
         'symbol': 'square',
         'color': 'blue',
-        'size': 10
+        'size': 8,
+        'marker': 's'
     }
 }
 
