@@ -16,16 +16,16 @@ from src.data.moex_client import MOEXClient
 from src.data.crypto_client import CryptoClient
 from src.patterns.pattern_detector import PatternDetector
 from src.backtest.engine import BacktestEngine
-from src.backtest.metrics import MetricsCalculator
 from src.gui.database_viewer import DatabaseViewer
 from src.gui.help_window import HelpWindow
-from src.visualization.chart_window import SimpleChartWindow
+import threading
+from src.visualization.tradingview_chart import create_plotly_chart
 from src.strategies.strategy_builder import Strategy, StrategyBuilder, TimeFrame, EntryRule, ExitRule
 from src.strategies.entry_rules import EntryRuleExecutor
 from src.strategies.exit_rules import ExitRuleExecutor
 from src.config.database import Database
 from src.utils.logger import log_user_action, log_error, log_app_info
-from src.utils.file_handler import FileHandler
+
 
 
 class StrategyDialog(QDialog):
@@ -184,7 +184,6 @@ class BacktestApp(QMainWindow):
         self.current_data = None
         self.backtest_results = None
         self.current_strategy = None
-        self.file_handler = FileHandler()
         self.database = Database()
         self.strategy_builder = StrategyBuilder()
 
@@ -805,24 +804,33 @@ class BacktestApp(QMainWindow):
         self.results_text.setText(text)
 
     def show_interactive_chart(self):
-        """Show interactive chart window"""
+        """Show interactive Plotly chart"""
         try:
             if not self.backtest_results:
                 QMessageBox.warning(self, "Warning", "Please run backtest first")
                 return
 
-            log_user_action("Show interactive chart")
-
-            if self.chart_window is None:
-                self.chart_window = SimpleChartWindow(self)
+            log_user_action("Show interactive Plotly chart")
 
             title = f"{self.ticker_edit.text()} - {self.current_strategy.name if self.current_strategy else 'Backtest'}"
-            self.chart_window.set_data(
-                self.backtest_results['df'],
-                self.backtest_results['trades'],
-                title
-            )
-            self.chart_window.show()
+
+            # Run Plotly chart in separate thread
+            import threading
+
+            def create_chart():
+                try:
+                    create_plotly_chart(
+                        self.backtest_results['df'],
+                        self.backtest_results['trades'],
+                        title
+                    )
+                except Exception as e:
+                    print(f"Plotly chart error: {e}")
+                    import traceback
+                    traceback.print_exc()
+
+            thread = threading.Thread(target=create_chart, daemon=True)
+            thread.start()
 
         except Exception as e:
             log_error(e, "show_interactive_chart")

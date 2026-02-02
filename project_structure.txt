@@ -27,6 +27,7 @@ moex_crypto_backtest/
 │   │   ├── chart_window.py
 │   │   ├── chart_builder.py
 │   │   └── markers.py
+|   |   |__ tradingview_chart.py
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   ├── logger.py

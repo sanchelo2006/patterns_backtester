@@ -44,13 +44,6 @@
         },
         {
             "$mid": 1,
-            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
-            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
-            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
-            "scheme": "file"
-        },
-        {
-            "$mid": 1,
             "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
             "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
             "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/gui/database_viewer.py",
@@ -131,6 +124,13 @@
             "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
             "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
             "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/markers.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/tradingview_chart.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/tradingview_chart.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/tradingview_chart.py",
             "scheme": "file"
         },
         {
