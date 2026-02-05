@@ -14,6 +14,7 @@ class Database:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(exist_ok=True)
         self.init_database()
+        self.update_database_schema()
 
     def init_database(self):
         """Initialize database tables"""
@@ -59,23 +60,6 @@ class Database:
             )
         ''')
 
-        # Trade details table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS trades (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                result_id INTEGER,
-                entry_date TEXT NOT NULL,
-                exit_date TEXT NOT NULL,
-                position_type TEXT NOT NULL,
-                entry_price REAL NOT NULL,
-                exit_price REAL NOT NULL,
-                pnl REAL NOT NULL,
-                pnl_percent REAL NOT NULL,
-                pattern TEXT,
-                exit_reason TEXT,
-                FOREIGN KEY (result_id) REFERENCES backtest_results (id)
-            )
-        ''')
 
         conn.commit()
         conn.close()
@@ -119,17 +103,65 @@ class Database:
 
         strategies = []
         for row in rows:
-            strategies.append({
-                'id': row['id'],
-                'name': row['name'],
-                'patterns': json.loads(row['patterns']),
-                'entry_rule': row['entry_rule'],
-                'entry_params': json.loads(row['entry_params'] or '{}'),
-                'exit_rule': row['exit_rule'],
-                'exit_params': json.loads(row['exit_params'] or '{}'),
-                'timeframe': row['timeframe'],
-                'risk_params': json.loads(row['risk_params'] or '{}')
-            })
+            try:
+                # Parse JSON fields
+                patterns = json.loads(row['patterns'] or '[]')
+                entry_params = json.loads(row['entry_params'] or '{}')
+                exit_params = json.loads(row['exit_params'] or '{}')
+                risk_params = json.loads(row['risk_params'] or '{}')
+
+                # Extract position size from risk_params or use default
+                position_size_pct = risk_params.get('position_size_pct', 10.0)
+
+                # Extract stop_loss and take_profit from exit_params
+                stop_loss_pct = exit_params.get('stop_loss_pct',
+                            exit_params.get('trailing_stop_pct', 2.0))
+                take_profit_pct = exit_params.get('take_profit_pct', 4.0)
+
+                # Extract max_bars_hold from exit_params or risk_params
+                max_bars_hold = exit_params.get('max_bars',
+                            risk_params.get('max_bars_hold', 20))
+
+                strategy = {
+                    'id': row['id'],
+                    'name': row['name'],
+                    'patterns': patterns,
+                    'entry_rule': row['entry_rule'],
+                    'entry_params': entry_params,
+                    'exit_rule': row['exit_rule'],
+                    'exit_params': exit_params,
+                    'position_size_pct': position_size_pct,
+                    'stop_loss_pct': stop_loss_pct,
+                    'take_profit_pct': take_profit_pct,
+                    'max_bars_hold': max_bars_hold,
+                    'created_at': row['created_at'],
+                    'enabled': True
+                }
+
+                # Handle old strategies that might have timeframe
+                if row['timeframe']:
+                    strategy['timeframe'] = row['timeframe']
+
+                strategies.append(strategy)
+
+            except json.JSONDecodeError as e:
+                logger.error(f"Error parsing strategy {row['id']}: {str(e)}")
+                # Create a basic strategy with defaults
+                strategies.append({
+                    'id': row['id'],
+                    'name': row['name'],
+                    'patterns': [],
+                    'entry_rule': row['entry_rule'],
+                    'entry_params': {},
+                    'exit_rule': row['exit_rule'],
+                    'exit_params': {},
+                    'position_size_pct': 10.0,
+                    'stop_loss_pct': 2.0,
+                    'take_profit_pct': 4.0,
+                    'max_bars_hold': 20,
+                    'created_at': row['created_at'],
+                    'enabled': True
+                })
 
         conn.close()
         return strategies
@@ -175,26 +207,6 @@ class Database:
 
         result_id = cursor.lastrowid
 
-        # Save trades
-        for trade in result_data.get('trades', []):
-            cursor.execute('''
-                INSERT INTO trades
-                (result_id, entry_date, exit_date, position_type, entry_price,
-                 exit_price, pnl, pnl_percent, pattern, exit_reason)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                result_id,
-                trade['entry_date'],
-                trade['exit_date'],
-                trade['position_type'],
-                trade['entry_price'],
-                trade['exit_price'],
-                trade['pnl'],
-                trade['pnl_percent'],
-                trade.get('pattern'),
-                trade.get('exit_reason')
-            ))
-
         conn.commit()
         conn.close()
 
@@ -220,9 +232,6 @@ class Database:
         results = []
 
         for row in rows:
-            # Load trades for this result
-            cursor.execute('SELECT * FROM trades WHERE result_id = ?', (row['id'],))
-            trades = cursor.fetchall()
 
             results.append({
                 'id': row['id'],
@@ -240,8 +249,119 @@ class Database:
                 'sharpe_ratio': row['sharpe_ratio'],
                 'max_drawdown': row['max_drawdown'],
                 'metrics': json.loads(row['metrics'] or '{}'),
-                'trades': [dict(trade) for trade in trades]
             })
 
         conn.close()
         return results
+
+    def update_database_schema(self):
+        """Update database schema to handle new structure"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            # Check if we need to add new columns
+            cursor.execute("PRAGMA table_info(strategies)")
+            columns = [col[1] for col in cursor.fetchall()]
+
+            # Add risk_params if missing (for backward compatibility)
+            if 'risk_params' not in columns:
+                cursor.execute('ALTER TABLE strategies ADD COLUMN risk_params TEXT DEFAULT "{}"')
+                logger.info("Added risk_params column to strategies table")
+
+            # Update old strategies to have proper risk_params
+            cursor.execute('SELECT id, exit_params FROM strategies WHERE risk_params = "{}" OR risk_params IS NULL')
+            old_strategies = cursor.fetchall()
+
+            for strategy_id, exit_params_json in old_strategies:
+                try:
+                    exit_params = json.loads(exit_params_json or '{}')
+                    risk_params = {
+                        'position_size_pct': 10.0,
+                        'max_bars_hold': exit_params.get('max_bars', 20)
+                    }
+                    cursor.execute(
+                        'UPDATE strategies SET risk_params = ? WHERE id = ?',
+                        (json.dumps(risk_params), strategy_id)
+                    )
+                except:
+                    pass
+
+            conn.commit()
+            logger.info("Database schema updated")
+
+        except Exception as e:
+            logger.error(f"Error updating database schema: {str(e)}")
+            conn.rollback()
+        finally:
+            conn.close()
+
+    def delete_backtest_result(self, result_id: int):
+        """Delete backtest result from database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('DELETE FROM backtest_results WHERE id = ?', (result_id,))
+            conn.commit()
+            logger.info(f"Backtest result deleted: ID {result_id}")
+        except Exception as e:
+            logger.error(f"Error deleting backtest result {result_id}: {str(e)}")
+            raise
+        finally:
+            conn.close()
+
+    def delete_all_backtest_results(self):
+        """Delete ALL backtest results from database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute('DELETE FROM backtest_results')
+            conn.commit()
+            logger.info("All backtest results deleted")
+        except Exception as e:
+            logger.error(f"Error deleting all backtest results: {str(e)}")
+            raise
+        finally:
+            conn.close()
+
+    def delete_all_strategies(self):
+        """Delete ALL strategies from database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            # First delete all backtest results (due to foreign key constraint)
+            cursor.execute('DELETE FROM backtest_results')
+            # Then delete all strategies
+            cursor.execute('DELETE FROM strategies')
+            conn.commit()
+            logger.info("All strategies and results deleted")
+        except Exception as e:
+            logger.error(f"Error deleting all strategies: {str(e)}")
+            raise
+        finally:
+            conn.close()
+
+    def clean_database(self):
+        """Clean entire database - delete everything"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        try:
+            # Delete all data from all tables
+            cursor.execute('DELETE FROM backtest_results')
+            cursor.execute('DELETE FROM strategies')
+
+            # Reset auto-increment counters
+            cursor.execute('DELETE FROM sqlite_sequence WHERE name="strategies"')
+            cursor.execute('DELETE FROM sqlite_sequence WHERE name="backtest_results"')
+
+            conn.commit()
+            logger.info("Database cleaned completely")
+        except Exception as e:
+            logger.error(f"Error cleaning database: {str(e)}")
+            raise
+        finally:
+            conn.close()

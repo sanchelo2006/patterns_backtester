@@ -32,46 +32,82 @@ class Strategy:
     entry_params: Dict[str, Any]
     exit_rule: ExitRule
     exit_params: Dict[str, Any]
-    timeframe: TimeFrame
     position_size_pct: float = 10.0
     stop_loss_pct: float = 2.0
     take_profit_pct: float = 4.0
     max_bars_hold: int = 20
     enabled: bool = True
+    id: int = None
+
+
+    def __post_init__(self):
+        """Initialize after dataclass creation"""
+        if self.entry_params is None:
+            self.entry_params = {}
+        if self.exit_params is None:
+            self.exit_params = self._create_default_exit_params()
+
+    def _create_default_exit_params(self) -> Dict[str, Any]:
+        """Create default exit parameters based on exit rule"""
+        if self.exit_rule == ExitRule.STOP_LOSS_TAKE_PROFIT:
+            return {
+                'stop_loss_pct': self.stop_loss_pct,
+                'take_profit_pct': self.take_profit_pct
+            }
+        elif self.exit_rule == ExitRule.TAKE_PROFIT_ONLY:
+            return {
+                'take_profit_pct': self.take_profit_pct
+            }
+        elif self.exit_rule == ExitRule.TIMEBASED_EXIT:
+            return {
+                'max_bars': self.max_bars_hold
+            }
+        elif self.exit_rule == ExitRule.TRAILING_STOP:
+            return {
+                'trailing_stop_pct': self.stop_loss_pct
+            }
+        else:
+            return {}
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert strategy to dictionary for serialization"""
         return {
+            'id': self.id,
             'name': self.name,
             'patterns': self.patterns,
             'entry_rule': self.entry_rule.value,
-            'entry_params': self.entry_params,
             'exit_rule': self.exit_rule.value,
-            'exit_params': self.exit_params,
-            'timeframe': self.timeframe.value,
             'position_size_pct': self.position_size_pct,
             'stop_loss_pct': self.stop_loss_pct,
             'take_profit_pct': self.take_profit_pct,
             'max_bars_hold': self.max_bars_hold,
+            'entry_params': self.entry_params,
+            'exit_params': self.exit_params,
             'enabled': self.enabled
+            # Remove 'timeframe': self.timeframe.value if hasattr(self, 'timeframe') else '1d'
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Strategy':
         """Create strategy from dictionary"""
+        # Handle old strategies that might have timeframe
+        if 'timeframe' in data:
+            print(f"Warning: Removing timeframe from strategy {data['name']}")
+
         return cls(
+            id=data.get('id'),
             name=data['name'],
             patterns=data['patterns'],
             entry_rule=EntryRule(data['entry_rule']),
-            entry_params=data.get('entry_params', {}),
             exit_rule=ExitRule(data['exit_rule']),
-            exit_params=data.get('exit_params', {}),
-            timeframe=TimeFrame(data['timeframe']),
             position_size_pct=data.get('position_size_pct', 10.0),
             stop_loss_pct=data.get('stop_loss_pct', 2.0),
             take_profit_pct=data.get('take_profit_pct', 4.0),
             max_bars_hold=data.get('max_bars_hold', 20),
+            entry_params=data.get('entry_params', {}),
+            exit_params=data.get('exit_params', {}),
             enabled=data.get('enabled', True)
+            # Remove timeframe parameter
         )
 
 
@@ -144,9 +180,11 @@ class StrategyBuilder:
         return strategy
 
     def save_strategy_to_db(self, strategy: Strategy, db_handler) -> int:
-        """Save strategy to database"""
+        """Save strategy to database and update its ID"""
         strategy_data = strategy.to_dict()
-        return db_handler.save_strategy(strategy_data)
+        strategy_id = db_handler.save_strategy(strategy_data)
+        strategy.id = strategy_id  # Update the strategy object with the new ID
+        return strategy_id
 
     def load_strategy_from_db(self, name: str, db_handler) -> Optional[Strategy]:
         """Load strategy from database by name"""

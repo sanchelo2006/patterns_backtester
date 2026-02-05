@@ -9,13 +9,6 @@
         },
         {
             "$mid": 1,
-            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
-            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
-            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/backtest/metrics.py",
-            "scheme": "file"
-        },
-        {
-            "$mid": 1,
             "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
             "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
             "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/config/database.py",
@@ -40,6 +33,20 @@
             "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
             "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
             "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/crypto_client.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/moex_client.py",
+            "scheme": "file"
+        },
+        {
+            "$mid": 1,
+            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/pattern_descriptions.json",
+            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/pattern_descriptions.json",
+            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/data/pattern_descriptions.json",
             "scheme": "file"
         },
         {
@@ -93,30 +100,9 @@
         },
         {
             "$mid": 1,
-            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
-            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
-            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/file_handler.py",
-            "scheme": "file"
-        },
-        {
-            "$mid": 1,
             "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
             "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
             "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/utils/logger.py",
-            "scheme": "file"
-        },
-        {
-            "$mid": 1,
-            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
-            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
-            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_builder.py",
-            "scheme": "file"
-        },
-        {
-            "$mid": 1,
-            "fsPath": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
-            "external": "file:///Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
-            "path": "/Users/galina/Documents/BACKTESTERS/patterns_backtester/src/visualization/chart_window.py",
             "scheme": "file"
         },
         {

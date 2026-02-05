@@ -7,33 +7,62 @@ from plotly.subplots import make_subplots
 from src.backtest.engine import Trade
 
 
-def create_plotly_chart(df: pd.DataFrame, trades: List[Trade], title: str = "Chart"):
+def create_plotly_chart(
+    df: pd.DataFrame,
+    trades: List[Trade],
+    title: str = "Chart",
+    show_volume: bool = True,
+    show_macd: bool = True,
+    show_rsi: bool = True
+):
     """Create interactive chart using Plotly"""
 
-    # DEBUG: Check data structure
-    print(f"\n=== DEBUG CHART DATA ===")
-    print(f"Data shape: {df.shape}")
-    print(f"Columns: {df.columns.tolist()}")
-    if len(df) > 0:
-        sample = df.iloc[:5]
-        for i in range(min(5, len(df))):
-            row = df.iloc[i]
-            print(f"\nCandle {i}:")
-            print(f"  Open: {row['Open']:.2f}, High: {row['High']:.2f}, Low: {row['Low']:.2f}, Close: {row['Close']:.2f}")
-            print(f"  Wick sizes: Upper: {row['High'] - max(row['Open'], row['Close']):.2f}, "
-                  f"Lower: {min(row['Open'], row['Close']) - row['Low']:.2f}")
-    print("=======================\n")
+    # Calculate how many rows we need
+    rows = 1  # Always have price chart
+    if show_volume:
+        rows += 1
+    if show_macd:
+        rows += 1
+    if show_rsi:
+        rows += 1
+
+    # Create row heights
+    row_heights = []
+    subplot_titles = [title]
+
+    if rows == 1:
+        row_heights = [1.0]
+    elif rows == 2:
+        row_heights = [0.7, 0.3]
+        subplot_titles.append("Volume")
+    elif rows == 3:
+        if show_volume and show_macd:
+            row_heights = [0.5, 0.25, 0.25]
+            subplot_titles.extend(["Volume", "MACD"])
+        elif show_volume and show_rsi:
+            row_heights = [0.5, 0.25, 0.25]
+            subplot_titles.extend(["Volume", "RSI"])
+        elif show_macd and show_rsi:
+            row_heights = [0.6, 0.2, 0.2]
+            subplot_titles.extend(["MACD", "RSI"])
+    elif rows == 4:
+        row_heights = [0.4, 0.2, 0.2, 0.2]
+        subplot_titles.extend(["Volume", "MACD", "RSI"])
 
     # Create subplots
     fig = make_subplots(
-        rows=4, cols=1,
+        rows=rows,
+        cols=1,
         shared_xaxes=True,
         vertical_spacing=0.03,
-        row_heights=[0.5, 0.15, 0.15, 0.2],
-        subplot_titles=[title, "Volume", "MACD", "RSI"]
+        row_heights=row_heights,
+        subplot_titles=subplot_titles
     )
 
-    # Add candlestick chart - FIXED VERSION
+    # Track current row for plotting
+    current_row = 1
+
+    # Add candlestick chart
     fig.add_trace(
         go.Candlestick(
             x=df.index,
@@ -42,26 +71,25 @@ def create_plotly_chart(df: pd.DataFrame, trades: List[Trade], title: str = "Cha
             low=df['Low'],
             close=df['Close'],
             name="Price",
-            # This is the key: use the same colors for increasing/decreasing
-            # but ensure wicks are visible
             increasing=dict(
-                line=dict(color='#26a69a', width=1),  # Body outline and wick color
-                fillcolor='#26a69a'  # Body fill color
+                line=dict(color='#26a69a', width=1),
+                fillcolor='#26a69a'
             ),
             decreasing=dict(
-                line=dict(color='#ef5350', width=1),  # Body outline and wick color
-                fillcolor='#ef5350'  # Body fill color
+                line=dict(color='#ef5350', width=1),
+                fillcolor='#ef5350'
             ),
-            # Ensure wicks are visible
-            line=dict(width=1),  # Overall line width
-            whiskerwidth=0.8,  # Width of wicks relative to candles
-            opacity=1  # Ensure full opacity
+            line=dict(width=1),
+            whiskerwidth=0.8,
+            opacity=1
         ),
-        row=1, col=1
+        row=current_row, col=1
     )
 
-    # Add volume
-    if 'Volume' in df.columns:
+    current_row += 1
+
+    # Add volume if enabled
+    if show_volume and 'Volume' in df.columns:
         colors = ['#26a69a' if close >= open_ else '#ef5350'
                  for close, open_ in zip(df['Close'], df['Open'])]
 
@@ -73,18 +101,27 @@ def create_plotly_chart(df: pd.DataFrame, trades: List[Trade], title: str = "Cha
                 marker_color=colors,
                 showlegend=False
             ),
-            row=2, col=1
+            row=current_row, col=1
         )
+        current_row += 1
 
-    # Add MACD
-    if len(df) > 26:
-        add_macd_plotly(fig, df)
+    # Add MACD if enabled
+    if show_macd and len(df) > 26:
+        try:
+            add_macd_plotly(fig, df, current_row)
+            current_row += 1
+        except Exception as e:
+            print(f"Error adding MACD: {e}")
 
-    # Add RSI
-    if len(df) > 14:
-        add_rsi_plotly(fig, df)
+    # Add RSI if enabled
+    if show_rsi and len(df) > 14:
+        try:
+            add_rsi_plotly(fig, df, current_row)
+            current_row += 1
+        except Exception as e:
+            print(f"Error adding RSI: {e}")
 
-    # Add trade markers
+    # Add trade markers to the main price chart (row 1)
     if trades:
         add_trade_markers_plotly(fig, df, trades)
 
@@ -112,7 +149,7 @@ def create_plotly_chart(df: pd.DataFrame, trades: List[Trade], title: str = "Cha
     fig.show()
 
 
-def add_macd_plotly(fig, df: pd.DataFrame):
+def add_macd_plotly(fig, df: pd.DataFrame, row: int = 3):
     """Add MACD to Plotly figure"""
     try:
         close_prices = df['Close'].values.astype(float)
@@ -131,7 +168,7 @@ def add_macd_plotly(fig, df: pd.DataFrame):
                 name="MACD",
                 line=dict(color='#2962FF', width=2)
             ),
-            row=3, col=1
+            row=row, col=1
         )
 
         # Signal line
@@ -142,7 +179,7 @@ def add_macd_plotly(fig, df: pd.DataFrame):
                 name="Signal",
                 line=dict(color='#FF6D00', width=2)
             ),
-            row=3, col=1
+            row=row, col=1
         )
 
         # Histogram
@@ -155,14 +192,13 @@ def add_macd_plotly(fig, df: pd.DataFrame):
                 marker_color=colors,
                 showlegend=False
             ),
-            row=3, col=1
+            row=row, col=1
         )
 
     except Exception as e:
         print(f"Error adding MACD to Plotly: {e}")
 
-
-def add_rsi_plotly(fig, df: pd.DataFrame):
+def add_rsi_plotly(fig, df: pd.DataFrame, row: int = 4):
     """Add RSI to Plotly figure"""
     try:
         close_prices = df['Close'].values.astype(float)
@@ -176,17 +212,17 @@ def add_rsi_plotly(fig, df: pd.DataFrame):
                 name="RSI",
                 line=dict(color='#FF9800', width=2)
             ),
-            row=4, col=1
+            row=row, col=1
         )
 
         # Add RSI levels
         fig.add_hline(y=30, line_dash="dash", line_color="red",
-                     row=4, col=1, opacity=0.5)
+                     row=row, col=1, opacity=0.5)
         fig.add_hline(y=70, line_dash="dash", line_color="green",
-                     row=4, col=1, opacity=0.5)
+                     row=row, col=1, opacity=0.5)
 
         # Set RSI y-axis range
-        fig.update_yaxes(range=[0, 100], row=4, col=1)
+        fig.update_yaxes(range=[0, 100], row=row, col=1)
 
     except Exception as e:
         print(f"Error adding RSI to Plotly: {e}")

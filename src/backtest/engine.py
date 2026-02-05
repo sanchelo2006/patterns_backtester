@@ -415,14 +415,20 @@ class BacktestEngine:
             'avg_roi_per_trade': avg_roi_per_trade
         }
 
-        # Add pattern statistics
+        # Add SIMPLE pattern statistics that are JSON serializable
         pattern_stats = trades_df.groupby('pattern').agg({
-            'pnl': ['count', 'sum', 'mean'],
-            'pnl_percent': 'mean',
-            'success': 'mean',
-            'invested_capital': 'mean'
+            'pnl': 'count',
+            'success': 'mean'
         }).round(2)
 
-        metrics['pattern_statistics'] = pattern_stats.to_dict()
+        pattern_stats_dict = {}
+        if not pattern_stats.empty:
+            for pattern, row in pattern_stats.iterrows():
+                pattern_stats_dict[str(pattern)] = {
+                    'count': int(row['pnl']),
+                    'win_rate': float(row['success'] * 100)
+                }
+
+        metrics['pattern_statistics'] = pattern_stats_dict
 
         return metrics

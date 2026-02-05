@@ -10,6 +10,7 @@ from pathlib import Path
 import sqlite3
 import json
 from datetime import datetime
+import numpy as np
 
 from src.config.settings import CANDLE_PATTERNS, DEFAULT_CAPITAL, DEFAULT_POSITION_SIZE, DEFAULT_THRESHOLD
 from src.data.moex_client import MOEXClient
@@ -52,18 +53,6 @@ class StrategyDialog(QDialog):
         name_layout.addWidget(self.name_edit)
         layout.addLayout(name_layout)
 
-        # Timeframe
-        timeframe_layout = QHBoxLayout()
-        timeframe_layout.addWidget(QLabel("Timeframe:"))
-        self.timeframe_combo = QComboBox()
-        for tf in TimeFrame:
-            self.timeframe_combo.addItem(tf.value, tf)
-        if self.strategy:
-            index = self.timeframe_combo.findText(self.strategy.timeframe.value)
-            if index >= 0:
-                self.timeframe_combo.setCurrentIndex(index)
-        timeframe_layout.addWidget(self.timeframe_combo)
-        layout.addLayout(timeframe_layout)
 
         # Pattern selection
         layout.addWidget(QLabel("Select Patterns:"))
@@ -125,21 +114,38 @@ class StrategyDialog(QDialog):
         risk_layout.addWidget(QLabel("Stop Loss (%):"), 1, 0)
         self.stop_loss_spin = QDoubleSpinBox()
         self.stop_loss_spin.setRange(0.1, 50)
-        self.stop_loss_spin.setValue(self.strategy.stop_loss_pct if self.strategy else 2.0)
+        # FIX: Get stop_loss from exit_params if exists
+        if self.strategy:
+            stop_loss_value = self.strategy.exit_params.get('stop_loss_pct',
+                                    self.strategy.exit_params.get('trailing_stop_pct', 2.0))
+        else:
+            stop_loss_value = 2.0
+        self.stop_loss_spin.setValue(stop_loss_value)
         self.stop_loss_spin.setSingleStep(0.5)
         risk_layout.addWidget(self.stop_loss_spin, 1, 1)
 
         risk_layout.addWidget(QLabel("Take Profit (%):"), 2, 0)
         self.take_profit_spin = QDoubleSpinBox()
         self.take_profit_spin.setRange(0.1, 100)
-        self.take_profit_spin.setValue(self.strategy.take_profit_pct if self.strategy else 4.0)
+        # FIX: Get take_profit from exit_params if exists
+        if self.strategy:
+            take_profit_value = self.strategy.exit_params.get('take_profit_pct', 4.0)
+        else:
+            take_profit_value = 4.0
+        self.take_profit_spin.setValue(take_profit_value)
         self.take_profit_spin.setSingleStep(0.5)
         risk_layout.addWidget(self.take_profit_spin, 2, 1)
 
         risk_layout.addWidget(QLabel("Max Bars to Hold:"), 3, 0)
         self.max_bars_spin = QSpinBox()
         self.max_bars_spin.setRange(1, 1000)
-        self.max_bars_spin.setValue(self.strategy.max_bars_hold if self.strategy else 20)
+        # FIX: Get max_bars from exit_params if exists
+        if self.strategy:
+            max_bars_value = self.strategy.exit_params.get('max_bars',
+                                self.strategy.max_bars_hold if hasattr(self.strategy, 'max_bars_hold') else 20)
+        else:
+            max_bars_value = 20
+        self.max_bars_spin.setValue(max_bars_value)
         risk_layout.addWidget(self.max_bars_spin, 3, 1)
 
         risk_group.setLayout(risk_layout)
@@ -164,7 +170,6 @@ class StrategyDialog(QDialog):
             'patterns': [item.text() for item in self.pattern_list.selectedItems()],
             'entry_rule': self.entry_combo.currentData(),
             'exit_rule': self.exit_combo.currentData(),
-            'timeframe': self.timeframe_combo.currentData(),
             'position_size_pct': self.position_spin.value(),
             'stop_loss_pct': self.stop_loss_spin.value(),
             'take_profit_pct': self.take_profit_spin.value(),
@@ -483,7 +488,6 @@ class BacktestApp(QMainWindow):
             return
 
         info = f"<b>{self.current_strategy.name}</b><br>"
-        info += f"Timeframe: {self.current_strategy.timeframe.value}<br>"
         info += f"Patterns: {', '.join(self.current_strategy.patterns[:5])}"
         if len(self.current_strategy.patterns) > 5:
             info += f"... (+{len(self.current_strategy.patterns) - 5} more)"
@@ -492,7 +496,8 @@ class BacktestApp(QMainWindow):
         info += f"Exit: {self.current_strategy.exit_rule.value}<br>"
         info += f"Position Size: {self.current_strategy.position_size_pct}%<br>"
         info += f"Stop Loss: {self.current_strategy.stop_loss_pct}%<br>"
-        info += f"Take Profit: {self.current_strategy.take_profit_pct}%"
+        info += f"Take Profit: {self.current_strategy.take_profit_pct}%<br>"
+        info += f"Max Bars: {self.current_strategy.max_bars_hold}"
 
         self.strategy_info.setHtml(info)
 
@@ -512,24 +517,52 @@ class BacktestApp(QMainWindow):
                     QMessageBox.warning(self, "Warning", "Select at least one pattern")
                     return
 
-                # Create strategy
-                strategy = self.strategy_builder.create_strategy(
+                # Create exit_params based on exit rule
+                exit_params = {}
+
+                if data['exit_rule'] == ExitRule.STOP_LOSS_TAKE_PROFIT:
+                    exit_params = {
+                        'stop_loss_pct': data['stop_loss_pct'],
+                        'take_profit_pct': data['take_profit_pct']
+                    }
+                elif data['exit_rule'] == ExitRule.TAKE_PROFIT_ONLY:
+                    exit_params = {
+                        'take_profit_pct': data['take_profit_pct']
+                    }
+                elif data['exit_rule'] == ExitRule.TIMEBASED_EXIT:
+                    exit_params = {
+                        'max_bars': data['max_bars_hold']
+                    }
+                elif data['exit_rule'] == ExitRule.TRAILING_STOP:
+                    exit_params = {
+                        'trailing_stop_pct': data['stop_loss_pct']
+                    }
+
+                # Create strategy - ID will be None initially
+                strategy = Strategy(
+                    id=None,  # Will be set when saved to database
                     name=data['name'],
                     patterns=data['patterns'],
                     entry_rule=data['entry_rule'],
+                    entry_params={},
                     exit_rule=data['exit_rule'],
-                    timeframe=data['timeframe'],
+                    exit_params=exit_params,
                     position_size_pct=data['position_size_pct'],
                     stop_loss_pct=data['stop_loss_pct'],
                     take_profit_pct=data['take_profit_pct'],
                     max_bars_hold=data['max_bars_hold']
                 )
 
-                # Save to database
+                # Save to database - this will set the strategy.id
                 self.strategy_builder.save_strategy_to_db(strategy, self.database)
 
                 # Reload strategies
                 self.load_strategies()
+
+                # Select the new strategy
+                index = self.strategy_combo.findText(data['name'])
+                if index >= 0:
+                    self.strategy_combo.setCurrentIndex(index)
 
                 log_user_action("Create strategy", {'name': data['name']})
 
@@ -548,15 +581,36 @@ class BacktestApp(QMainWindow):
             try:
                 data = dialog.get_strategy_data()
 
-                # Update strategy
+                # Create proper exit_params based on exit rule
+                exit_params = {}
+
+                if data['exit_rule'] == ExitRule.STOP_LOSS_TAKE_PROFIT:
+                    exit_params = {
+                        'stop_loss_pct': data['stop_loss_pct'],
+                        'take_profit_pct': data['take_profit_pct']
+                    }
+                elif data['exit_rule'] == ExitRule.TAKE_PROFIT_ONLY:
+                    exit_params = {
+                        'take_profit_pct': data['take_profit_pct']
+                    }
+                elif data['exit_rule'] == ExitRule.TIMEBASED_EXIT:
+                    exit_params = {
+                        'max_bars': data['max_bars_hold']
+                    }
+                elif data['exit_rule'] == ExitRule.TRAILING_STOP:
+                    exit_params = {
+                        'trailing_stop_pct': data['stop_loss_pct']
+                    }
+
+                # Create updated strategy - PRESERVE THE ID
                 updated_strategy = Strategy(
+                    id=self.current_strategy.id if hasattr(self.current_strategy, 'id') else None,
                     name=data['name'],
                     patterns=data['patterns'],
                     entry_rule=data['entry_rule'],
                     entry_params=self.current_strategy.entry_params,
                     exit_rule=data['exit_rule'],
-                    exit_params=self.current_strategy.exit_params,
-                    timeframe=data['timeframe'],
+                    exit_params=exit_params,
                     position_size_pct=data['position_size_pct'],
                     stop_loss_pct=data['stop_loss_pct'],
                     take_profit_pct=data['take_profit_pct'],
@@ -569,7 +623,19 @@ class BacktestApp(QMainWindow):
                 # Reload strategies
                 self.load_strategies()
 
-                log_user_action("Edit strategy", {'name': data['name']})
+                # Update current strategy
+                self.current_strategy = updated_strategy
+                self.update_strategy_info()
+
+                log_user_action("Edit strategy", {
+                    'name': data['name'],
+                    'position_size': data['position_size_pct'],
+                    'stop_loss': data['stop_loss_pct'],
+                    'take_profit': data['take_profit_pct'],
+                    'max_bars': data['max_bars_hold']
+                })
+
+                QMessageBox.information(self, "Success", "Strategy updated successfully!")
 
             except Exception as e:
                 log_error(e, "edit_strategy")
@@ -636,7 +702,6 @@ class BacktestApp(QMainWindow):
 
             if market == "MOEX":
                 self.data_client = MOEXClient()
-                # Pass timeframe string directly
                 data = self.data_client.get_data(ticker, start_date, end_date, timeframe.value)
             else:
                 self.data_client = CryptoClient()
@@ -658,28 +723,23 @@ class BacktestApp(QMainWindow):
             if data is not None and not data.empty:
                 self.current_data = data
                 self.run_button.setEnabled(True)
+                self.chart_button.setEnabled(False)  # Disable chart until backtest runs
 
-                # Display data info
-                info_text = f"Fetched {len(data)} bars for {ticker}\n"
-                info_text += f"Date range: {data.index[0].strftime('%Y-%m-%d')} to {data.index[-1].strftime('%Y-%m-%d')}\n"
-                info_text += f"Columns: {', '.join(data.columns.tolist())}"
+                # Display fetched data in results area
+                self.display_fetched_data(data)
 
-                self.statusBar().showMessage(info_text)
                 log_app_info(f"Data fetched successfully: {len(data)} bars")
-
-                # Debug: print data info
-                print(f"Data shape: {data.shape}")
-                print(f"Data columns: {data.columns.tolist()}")
-                print(f"First few rows:\n{data.head()}")
 
             else:
                 QMessageBox.warning(self, "Warning", "No data found for the given parameters")
                 self.statusBar().showMessage("Failed to fetch data")
+                self.results_text.setText("No data available. Please check your parameters.")
 
         except Exception as e:
             log_error(e, "fetch_data")
             QMessageBox.critical(self, "Error", f"Failed to fetch data: {str(e)}")
             self.statusBar().showMessage("Error fetching data")
+            self.results_text.setText(f"Error fetching data: {str(e)}")
 
     def run_backtest(self):
         """Run backtest with selected parameters"""
@@ -691,6 +751,10 @@ class BacktestApp(QMainWindow):
             if self.current_data is None or self.current_data.empty:
                 QMessageBox.warning(self, "Warning", "Please fetch data first")
                 return
+
+            # Clear results area and show "Running backtest..." message
+            self.results_text.setText("Running backtest... Please wait.")
+            QApplication.processEvents()
 
             # Get parameters
             threshold = self.threshold_slider.value() / 100
@@ -734,6 +798,8 @@ class BacktestApp(QMainWindow):
             self.display_results()
 
             self.chart_button.setEnabled(True)
+            self.save_excel_btn.setEnabled(True)
+            self.save_db_btn.setEnabled(True)
             self.statusBar().showMessage("Backtest completed successfully")
             log_app_info(f"Backtest completed: {len(self.backtest_results['trades'])} trades")
 
@@ -741,6 +807,7 @@ class BacktestApp(QMainWindow):
             log_error(e, "run_backtest")
             QMessageBox.critical(self, "Error", f"Backtest failed: {str(e)}")
             self.statusBar().showMessage("Backtest failed")
+            self.results_text.setText(f"Backtest failed with error: {str(e)}\n\nPlease check the logs for details.")
 
     def display_results(self):
         """Display backtest results in text area"""
@@ -804,33 +871,46 @@ class BacktestApp(QMainWindow):
         self.results_text.setText(text)
 
     def show_interactive_chart(self):
-        """Show interactive Plotly chart"""
+        """Show interactive Plotly chart with toggle options"""
         try:
             if not self.backtest_results:
                 QMessageBox.warning(self, "Warning", "Please run backtest first")
                 return
 
-            log_user_action("Show interactive Plotly chart")
+            # Create dialog for indicator selection
+            dialog = IndicatorSelectionDialog(self)
+            if dialog.exec_() == QDialog.Accepted:
+                show_volume, show_macd, show_rsi = dialog.get_selections()
 
-            title = f"{self.ticker_edit.text()} - {self.current_strategy.name if self.current_strategy else 'Backtest'}"
+                log_user_action("Show interactive Plotly chart", {
+                    "volume": show_volume,
+                    "macd": show_macd,
+                    "rsi": show_rsi
+                })
 
-            # Run Plotly chart in separate thread
-            import threading
+                title = f"{self.ticker_edit.text()} - {self.current_strategy.name if self.current_strategy else 'Backtest'}"
 
-            def create_chart():
-                try:
-                    create_plotly_chart(
-                        self.backtest_results['df'],
-                        self.backtest_results['trades'],
-                        title
-                    )
-                except Exception as e:
-                    print(f"Plotly chart error: {e}")
-                    import traceback
-                    traceback.print_exc()
+                # Run Plotly chart in separate thread
+                import threading
 
-            thread = threading.Thread(target=create_chart, daemon=True)
-            thread.start()
+                def create_chart():
+                    try:
+                        from src.visualization.tradingview_chart import create_plotly_chart
+                        create_plotly_chart(
+                            self.backtest_results['df'],
+                            self.backtest_results['trades'],
+                            title,
+                            show_volume=show_volume,
+                            show_macd=show_macd,
+                            show_rsi=show_rsi
+                        )
+                    except Exception as e:
+                        print(f"Plotly chart error: {e}")
+                        import traceback
+                        traceback.print_exc()
+
+                thread = threading.Thread(target=create_chart, daemon=True)
+                thread.start()
 
         except Exception as e:
             log_error(e, "show_interactive_chart")
@@ -927,7 +1007,7 @@ class BacktestApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to save to Excel: {str(e)}")
 
     def save_to_database(self):
-        """Save backtest results to database"""
+        """Save backtest results to database - SIMPLIFIED VERSION"""
         try:
             if not self.backtest_results:
                 QMessageBox.warning(self, "Warning", "No results to save")
@@ -939,31 +1019,51 @@ class BacktestApp(QMainWindow):
 
             log_user_action("Save to database")
 
+            # Get metrics and clean them
+            source_metrics = self.backtest_results['metrics'].copy()
+
+            # Debug the metrics structure
+            print("\n=== DEBUG METRICS STRUCTURE ===")
+            self.debug_metrics_structure(source_metrics)
+            print("================================\n")
+
+            # Create a SIMPLE metrics dictionary without complex structures
+            clean_metrics = self._create_clean_metrics(source_metrics)
+
+            # Verify it's JSON serializable
+            try:
+                json.dumps(clean_metrics)
+            except TypeError as e:
+                print(f"WARNING: Metrics still not serializable: {e}")
+                # Create even simpler metrics
+                clean_metrics = self._create_minimal_metrics(source_metrics)
+
             # Prepare result data
             result_data = {
-                'strategy_id': None,  # Would need strategy ID from DB
+                'strategy_id': self.current_strategy.id if hasattr(self.current_strategy, 'id') else None,
                 'symbol': self.ticker_edit.text(),
                 'timeframe': self.timeframe_combo.currentText(),
                 'start_date': self.start_date.date().toString("yyyy-MM-dd"),
                 'end_date': self.end_date.date().toString("yyyy-MM-dd"),
                 'initial_capital': self.capital_spin.value(),
-                'final_capital': self.backtest_results['metrics']['final_capital'],
-                'total_return': self.backtest_results['metrics']['total_return_pct'],
-                'total_trades': self.backtest_results['metrics']['total_trades'],
-                'win_rate': self.backtest_results['metrics']['win_rate'],
-                'profit_factor': self.backtest_results['metrics']['profit_factor'],
-                'sharpe_ratio': self.backtest_results['metrics'].get('sharpe_ratio'),
-                'max_drawdown': self.backtest_results['metrics']['max_drawdown'],
-                'metrics': self.backtest_results['metrics'],
+                'final_capital': source_metrics.get('final_capital', 0),
+                'total_return': source_metrics.get('total_return_pct', 0),
+                'total_trades': source_metrics.get('total_trades', 0),
+                'win_rate': source_metrics.get('win_rate', 0),
+                'profit_factor': source_metrics.get('profit_factor', 0),
+                'sharpe_ratio': source_metrics.get('sharpe_ratio'),
+                'max_drawdown': source_metrics.get('max_drawdown', 0),
+                'metrics': clean_metrics,
                 'trades': [t.to_dict() for t in self.backtest_results['trades']]
             }
 
             # Get strategy ID
-            strategies = self.strategy_builder.get_all_strategies(self.database)
-            for strat in strategies:
-                if strat.name == self.current_strategy.name:
-                    result_data['strategy_id'] = strat.id
-                    break
+            if result_data['strategy_id'] is None:
+                strategies = self.strategy_builder.get_all_strategies(self.database)
+                for strat in strategies:
+                    if strat.name == self.current_strategy.name:
+                        result_data['strategy_id'] = strat.id
+                        break
 
             # Save to database
             result_id = self.database.save_backtest_result(result_data)
@@ -1122,3 +1222,230 @@ class BacktestApp(QMainWindow):
         # Log discrepancies
         if abs(current_capital - engine.capital) > 0.01:
             logger.warning(f"Capital mismatch: expected={current_capital:.2f}, actual={engine.capital:.2f}")
+
+    def display_fetched_data(self, df: pd.DataFrame):
+        """Display fetched data sample in results area"""
+        if df is None or df.empty:
+            self.results_text.setText("No data available")
+            return
+
+        # Display basic info
+        text = "=" * 80 + "\n"
+        text += "FETCHED DATA SAMPLE\n"
+        text += "=" * 80 + "\n\n"
+
+        # Basic info
+        text += f"Total bars: {len(df):,}\n"
+        text += f"Date range: {df.index[0].strftime('%Y-%m-%d')} to {df.index[-1].strftime('%Y-%m-%d')}\n"
+        text += f"Columns: {', '.join(df.columns.tolist())}\n\n"
+
+        # Data sample (first 50 rows or available)
+        sample_size = min(50, len(df))
+        text += f"First {sample_size} rows:\n"
+        text += "-" * 80 + "\n"
+
+        # Create a formatted table
+        if 'Open' in df.columns and 'High' in df.columns and 'Low' in df.columns and 'Close' in df.columns:
+            # Format as OHLC table
+            text += f"{'Date':<12} {'Open':>8} {'High':>8} {'Low':>8} {'Close':>8} {'Volume':>12}\n"
+            text += "-" * 80 + "\n"
+
+            for i in range(sample_size):
+                if i < len(df):
+                    row = df.iloc[i]
+                    date_str = df.index[i].strftime('%Y-%m-%d')
+                    open_price = f"{row['Open']:.2f}" if 'Open' in df.columns else "N/A"
+                    high_price = f"{row['High']:.2f}" if 'High' in df.columns else "N/A"
+                    low_price = f"{row['Low']:.2f}" if 'Low' in df.columns else "N/A"
+                    close_price = f"{row['Close']:.2f}" if 'Close' in df.columns else "N/A"
+
+                    # Format volume with thousands separator
+                    if 'Volume' in df.columns and not pd.isna(row['Volume']):
+                        volume_str = f"{int(row['Volume']):,}"
+                    else:
+                        volume_str = "N/A"
+
+                    text += f"{date_str:<12} {open_price:>8} {high_price:>8} {low_price:>8} {close_price:>8} {volume_str:>12}\n"
+        else:
+            # Generic display
+            for i in range(sample_size):
+                if i < len(df):
+                    date_str = df.index[i].strftime('%Y-%m-%d')
+                    text += f"{date_str}: "
+                    for col in df.columns:
+                        if col != 'Volume':
+                            text += f"{col}={df.iloc[i][col]:.2f} "
+                        else:
+                            text += f"{col}={int(df.iloc[i][col]):,} "
+                    text += "\n"
+
+        # Add statistics
+        text += "\n" + "=" * 80 + "\n"
+        text += "DATA STATISTICS\n"
+        text += "=" * 80 + "\n\n"
+
+        if 'Close' in df.columns:
+            close_series = df['Close']
+            text += f"Close Price Statistics:\n"
+            text += f"  Min: {close_series.min():.2f}\n"
+            text += f"  Max: {close_series.max():.2f}\n"
+            text += f"  Mean: {close_series.mean():.2f}\n"
+            text += f"  Std Dev: {close_series.std():.2f}\n"
+            text += f"  Last Price: {close_series.iloc[-1]:.2f}\n\n"
+
+        if 'Volume' in df.columns and df['Volume'].sum() > 0:
+            volume_series = df['Volume']
+            text += f"Volume Statistics:\n"
+            text += f"  Avg Volume: {volume_series.mean():,.0f}\n"
+            text += f"  Max Volume: {volume_series.max():,.0f}\n"
+            text += f"  Total Volume: {volume_series.sum():,.0f}\n"
+
+        self.results_text.setText(text)
+
+        # Also update status bar
+        self.statusBar().showMessage(f"Fetched {len(df)} bars. Showing first {sample_size} rows.")
+
+    def _create_clean_metrics(self, source_metrics):
+        """Create clean, JSON-serializable metrics"""
+        clean_metrics = {}
+
+        # Basic metrics that are always safe
+        basic_keys = [
+            'initial_capital', 'final_capital', 'total_return_pct',
+            'total_trades', 'winning_trades', 'losing_trades', 'win_rate',
+            'total_pnl', 'avg_win', 'avg_loss', 'profit_factor',
+            'sharpe_ratio', 'max_drawdown', 'max_win', 'max_loss',
+            'consecutive_wins', 'consecutive_losses', 'long_trades',
+            'short_trades', 'avg_pnl_per_trade', 'std_pnl',
+            'total_invested', 'avg_invested_per_trade', 'avg_roi_per_trade'
+        ]
+
+        for key in basic_keys:
+            if key in source_metrics:
+                value = source_metrics[key]
+                clean_metrics[key] = self._convert_to_json_serializable(value)
+
+        # Handle timedelta
+        if 'avg_trade_duration' in source_metrics:
+            dur = source_metrics['avg_trade_duration']
+            clean_metrics['avg_trade_duration'] = str(dur) if isinstance(dur, pd.Timedelta) else dur
+
+        # Handle pattern statistics SIMPLY - just store counts
+        if 'pattern_statistics' in source_metrics:
+            pattern_stats = source_metrics['pattern_statistics']
+            if isinstance(pattern_stats, dict):
+                # Create a simple version with just pattern names and counts
+                simple_pattern_stats = {}
+                try:
+                    # Try to extract pattern counts
+                    if 'count' in pattern_stats and isinstance(pattern_stats['count'], dict):
+                        for pattern, count in pattern_stats['count'].items():
+                            if isinstance(pattern, (str, int, float)):
+                                simple_pattern_stats[str(pattern)] = {'count': count}
+
+                    clean_metrics['pattern_statistics'] = simple_pattern_stats
+                except:
+                    # If we can't parse it, skip it
+                    pass
+
+        return clean_metrics
+
+    def _create_minimal_metrics(self, source_metrics):
+        """Create absolutely minimal metrics if cleaning fails"""
+        return {
+            'initial_capital': float(source_metrics.get('initial_capital', 0)),
+            'final_capital': float(source_metrics.get('final_capital', 0)),
+            'total_return_pct': float(source_metrics.get('total_return_pct', 0)),
+            'total_trades': int(source_metrics.get('total_trades', 0)),
+            'win_rate': float(source_metrics.get('win_rate', 0)),
+            'profit_factor': float(source_metrics.get('profit_factor', 0)),
+            'max_drawdown': float(source_metrics.get('max_drawdown', 0))
+        }
+
+    def _convert_to_json_serializable(self, value):
+        """Convert any value to JSON-serializable format"""
+        if isinstance(value, (int, float, str, bool, type(None))):
+            return value
+        elif isinstance(value, pd.Timestamp):
+            return value.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(value, pd.Timedelta):
+            return str(value)
+        elif isinstance(value, (np.integer, np.int64, np.int32)):
+            return int(value)
+        elif isinstance(value, (np.floating, np.float64, np.float32)):
+            return float(value)
+        elif isinstance(value, np.ndarray):
+            return value.tolist()
+        else:
+            try:
+                return str(value)
+            except:
+                return None
+
+    def debug_metrics_structure(self, metrics, indent=0):
+        """Debug: Print metrics structure to find tuple keys"""
+        prefix = "  " * indent
+        for key, value in metrics.items():
+            print(f"{prefix}Key: {key} (type: {type(key)})")
+            if isinstance(key, tuple):
+                print(f"{prefix}  WARNING: TUPLE KEY FOUND: {key}")
+
+            if isinstance(value, dict):
+                print(f"{prefix}  Value is dict:")
+                self.debug_metrics_structure(value, indent + 2)
+            elif isinstance(value, (list, tuple)):
+                print(f"{prefix}  Value is list/tuple with {len(value)} items")
+                if value and isinstance(value[0], dict):
+                    for i, item in enumerate(value[:2]):  # Just first 2
+                        print(f"{prefix}    Item {i}:")
+                        self.debug_metrics_structure(item, indent + 3)
+            else:
+                print(f"{prefix}  Value: {value} (type: {type(value)})")
+
+class IndicatorSelectionDialog(QDialog):
+    """Dialog for selecting which indicators to show"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Select Indicators")
+        self.setModal(True)
+        self.setup_ui()
+
+    def setup_ui(self):
+        """Setup user interface"""
+        layout = QVBoxLayout(self)
+
+        # Volume checkbox
+        self.volume_check = QCheckBox("Show Volume")
+        self.volume_check.setChecked(True)
+        layout.addWidget(self.volume_check)
+
+        # MACD checkbox
+        self.macd_check = QCheckBox("Show MACD")
+        self.macd_check.setChecked(True)
+        layout.addWidget(self.macd_check)
+
+        # RSI checkbox
+        self.rsi_check = QCheckBox("Show RSI")
+        self.rsi_check.setChecked(True)
+        layout.addWidget(self.rsi_check)
+
+        # Buttons
+        button_layout = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        ok_btn.clicked.connect(self.accept)
+        button_layout.addWidget(ok_btn)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+
+        layout.addLayout(button_layout)
+
+    def get_selections(self):
+        """Get selected indicators"""
+        return (
+            self.volume_check.isChecked(),
+            self.macd_check.isChecked(),
+            self.rsi_check.isChecked()
+        )
