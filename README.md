@@ -28,6 +28,8 @@
 
 The **MOEX & Crypto Backtest System** is a comprehensive trading strategy backtesting platform specifically designed for testing Japanese candlestick patterns on **MOEX (Moscow Exchange)** and **cryptocurrency markets**. The application provides a complete workflow from strategy creation to performance analysis with detailed visualization capabilities.
 
+- [📑 Table of Contents](#-table-of-contents)
+
 ## ✨ Key Features
 
 ### 🌐 **Multi-Market Support**
