@@ -1,88 +1,99 @@
-MOEX & Crypto Backtest System
-This project is fully developed by DeepSeek AI Assistant
+# 📊 MOEX & Crypto Backtest System
 
-📋 Project Overview
-The MOEX & Crypto Backtest System is a comprehensive trading strategy backtesting platform specifically designed for testing Japanese candlestick patterns on MOEX (Moscow Exchange) and cryptocurrency markets. The application provides a complete workflow from strategy creation to performance analysis with detailed visualization capabilities.
+*🤖 This project is fully developed by DeepSeek AI Assistant*
 
-🎯 Key Features
-Multi-Market Support
-MOEX (Moscow Exchange): Full support for Russian stock market data
+## 📑 Table of Contents
+- [🎯 Project Overview](#-project-overview)
+- [✨ Key Features](#-key-features)
+- [📁 Project Structure](#-project-structure)
+- [🔧 Installation & Setup](#-installation--setup)
+- [📊 Supported Candlestick Patterns](#-supported-candlestick-patterns)
+- [🎮 User Guide](#-user-guide)
+  - [1. Creating a Strategy](#1-creating-a-strategy)
+  - [2. Fetching Market Data](#2-fetching-market-data)
+  - [3. Running Backtest](#3-running-backtest)
+  - [4. Analyzing Results](#4-analyzing-results)
+  - [5. Database Management](#5-database-management)
+- [⚙️ Technical Details](#️-technical-details)
+- [📈 Performance Metrics](#-performance-metrics)
+- [🔍 Advanced Features](#-advanced-features)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [📚 API Reference](#-api-reference)
+- [🔮 Future Enhancements](#-future-enhancements)
+- [📄 License & Disclaimer](#-license--disclaimer)
 
-Cryptocurrency Markets: Integration with Bybit exchange via API
+---
 
-Support for both testnet and mainnet environments
+## 🎯 Project Overview
 
-Pattern Detection & Analysis
-61 Japanese Candlestick Patterns: Full TA-Lib integration
+The **MOEX & Crypto Backtest System** is a comprehensive trading strategy backtesting platform specifically designed for testing Japanese candlestick patterns on **MOEX (Moscow Exchange)** and **cryptocurrency markets**. The application provides a complete workflow from strategy creation to performance analysis with detailed visualization capabilities.
 
-Adjustable Detection Threshold: Fine-tune pattern sensitivity (0-100%)
+## ✨ Key Features
 
-Pattern Visualization: Interactive diagrams with detailed explanations
+### 🌐 **Multi-Market Support**
+- **🇷🇺 MOEX (Moscow Exchange)**: Full support for Russian stock market data
+- **₿ Cryptocurrency Markets**: Integration with Bybit exchange via API
+- Support for both testnet and mainnet environments
 
-Pattern Statistics: Performance analysis per pattern type
+### 🔍 **Pattern Detection & Analysis**
+- **🕯️ 61 Japanese Candlestick Patterns**: Full TA-Lib integration
+- **🎚️ Adjustable Detection Threshold**: Fine-tune pattern sensitivity (0-100%)
+- **📐 Pattern Visualization**: Interactive diagrams with detailed explanations
+- **📊 Pattern Statistics**: Performance analysis per pattern type
 
-Strategy Management
-Custom Strategy Creation: Build strategies with multiple patterns
+### 🎯 **Strategy Management**
+- **🏗️ Custom Strategy Creation**: Build strategies with multiple patterns
+- **↔️ Entry & Exit Rules**: Various rule configurations
+- **🛡️ Risk Management**: Position sizing, stop loss, take profit
+- **💾 Database Storage**: Save and load strategies from SQLite database
 
-Entry & Exit Rules: Various rule configurations
+### ⚡ **Backtesting Engine**
+- **🎯 Realistic Simulation**: Includes commission and slippage
+- **📊 Performance Metrics**: Comprehensive statistics (Sharpe ratio, win rate, max drawdown, etc.)
+- **💰 Capital Tracking**: Detailed trade-by-trade capital allocation
+- **⏱️ Multi-timeframe Support**: From 1 minute to monthly charts
 
-Risk Management: Position sizing, stop loss, take profit
+### 📈 **Visualization & Reporting**
+- **📊 Interactive Plotly Charts**: Professional TradingView-style interface
+- **📈 Technical Indicators**: MACD, RSI, Volume with toggle options
+- **📍 Trade Markers**: Visual entry/exit points on charts
+- **📥 Excel Export**: Complete results with multiple sheets
+- **🗃️ Database Integration**: Store and compare historical results
 
-Database Storage: Save and load strategies from SQLite database
-
-Backtesting Engine
-Realistic Simulation: Includes commission and slippage
-
-Performance Metrics: Comprehensive statistics (Sharpe ratio, win rate, max drawdown, etc.)
-
-Capital Tracking: Detailed trade-by-trade capital allocation
-
-Multi-timeframe Support: From 1 minute to monthly charts
-
-Visualization & Reporting
-Interactive Plotly Charts: Professional TradingView-style interface
-
-Technical Indicators: MACD, RSI, Volume with toggle options
-
-Trade Markers: Visual entry/exit points on charts
-
-Excel Export: Complete results with multiple sheets
-
-Database Integration: Store and compare historical results
-
-📁 Project Structure
-text
+## 📁 Project Structure
 patterns_backtester/
 ├── 📂 database/
-│   └── strategies.db          # SQLite database for strategies and results
-├── 📂 logs/                   # Application logs (rotated weekly)
-├── 📂 results/                # Excel export files
+│ └── strategies.db # SQLite database for strategies and results
+├── 📂 logs/ # Application logs (rotated weekly)
+├── 📂 results/ # Excel export files
 ├── 📂 src/
-│   ├── 📂 backtest/          # Backtesting engine and metrics
-│   ├── 📂 config/            # Configuration and settings
-│   ├── 📂 data/              # Data clients (MOEX, Crypto)
-│   ├── 📂 gui/               # PyQt5 GUI components
-│   ├── 📂 patterns/          # Pattern detection logic
-│   ├── 📂 strategies/        # Strategy definitions and rules
-│   ├── 📂 utils/             # Logging and utilities
-│   └── 📂 visualization/     # Charting and visualization
-├── main.py                   # Application entry point
-├── requirements.txt          # Python dependencies
-└── README.md                # This file
-🔧 Installation & Setup
-Prerequisites
-Python 3.8+
+│ ├── 📂 backtest/ # Backtesting engine and metrics
+│ ├── 📂 config/ # Configuration and settings
+│ ├── 📂 data/ # Data clients (MOEX, Crypto)
+│ ├── 📂 gui/ # PyQt5 GUI components
+│ ├── 📂 patterns/ # Pattern detection logic
+│ ├── 📂 strategies/ # Strategy definitions and rules
+│ ├── 📂 utils/ # Logging and utilities
+│ └── 📂 visualization/ # Charting and visualization
+├── main.py # Application entry point
+├── requirements.txt # Python dependencies
+└── README.md # This file
 
-Git
+text
 
-Internet connection (for data fetching)
+## 🔧 Installation & Setup
 
-Step-by-Step Installation
-Clone the Repository
+### 📋 **Prerequisites**
+- Python 3.8+
+- Git
+- Internet connection (for data fetching)
 
-bash
-git clone <repository-url>
-cd patterns_backtester
+### 🚀 **Step-by-Step Installation**
+
+1. **Clone the Repository**
+   ```bash
+   git clone <repository-url>
+   cd patterns_backtester
 Create Virtual Environment
 
 bash
@@ -110,11 +121,11 @@ Run the Application
 bash
 python main.py
 📊 Supported Candlestick Patterns
-Note: Pattern descriptions are currently under development. Basic information is available, but detailed descriptions and reliability ratings are being refined.
+⚠️ Note: Pattern descriptions are currently under development. Basic information is available, but detailed descriptions and reliability ratings are being refined.
 
 The system supports all 61 TA-Lib candlestick patterns:
 
-Single Candle Patterns
+🕯️ Single Candle Patterns
 CDLDOJI - Indecision pattern
 
 CDLHAMMER - Bullish reversal
@@ -129,7 +140,7 @@ CDLMARUBOZU - Strong momentum
 
 CDLSPINNINGTOP - Indecision
 
-Two Candle Patterns
+🕯️🕯️ Two Candle Patterns
 CDLENGULFING - Strong reversal
 
 CDLHARAMI - Potential reversal
@@ -140,7 +151,7 @@ CDLPIERCING - Bullish reversal
 
 CDLDARKCLOUDCOVER - Bearish reversal
 
-Three Candle Patterns
+🕯️🕯️🕯️ Three Candle Patterns
 CDLMORNINGSTAR - Bullish reversal
 
 CDLEVENINGSTAR - Bearish reversal
@@ -151,7 +162,7 @@ CDL3BLACKCROWS - Strong bearish
 
 CDLIDENTICAL3CROWS - Very bearish
 
-Complex Patterns
+🎭 Complex Patterns
 CDLABANDONEDBABY - Rare but reliable reversal
 
 CDLKICKING - Gap-based reversal
@@ -162,7 +173,7 @@ CDLRISEFALL3METHODS - Continuation pattern
 
 CDLTRISTAR - Extreme indecision
 
-Full pattern list available in the Help section of the application.
+📋 Full pattern list available in the Help section of the application.
 
 🎮 User Guide
 1. Creating a Strategy
@@ -237,48 +248,48 @@ Click "Run Backtest"
 View results in the right panel
 
 4. Analyzing Results
-Performance Metrics
-Capital: Initial/Final, Total Return %
+📊 Performance Metrics
+💰 Capital: Initial/Final, Total Return %
 
-Trade Statistics: Total trades, Win Rate, Profit Factor
+📈 Trade Statistics: Total trades, Win Rate, Profit Factor
 
-Risk Metrics: Sharpe Ratio, Max Drawdown, Avg Trade Duration
+⚖️ Risk Metrics: Sharpe Ratio, Max Drawdown, Avg Trade Duration
 
-Pattern Performance: Win rate by pattern type
+🔍 Pattern Performance: Win rate by pattern type
 
-Visualization Options
+📈 Visualization Options
 Click "Show Chart" for interactive visualization
 
 Select indicators to display (Volume, MACD, RSI)
 
 Use Plotly controls to:
 
-Zoom in/out
+🔍 Zoom in/out
 
-Pan across time
+↔️ Pan across time
 
-Hover for detailed values
+🖱️ Hover for detailed values
 
-Compare price levels
+📏 Compare price levels
 
-Export Options
-Excel Export: Complete results with multiple sheets
+💾 Export Options
+📥 Excel Export: Complete results with multiple sheets
 
-Database Save: Store results for historical comparison
+🗃️ Database Save: Store results for historical comparison
 
-CSV Export: From database viewer
+📋 CSV Export: From database viewer
 
 5. Database Management
 Access via "View Database" button:
 
-Strategies Tab
+🗂️ Strategies Tab
 View all saved strategies
 
 Edit or delete individual strategies
 
 Export to CSV
 
-Results Tab
+📋 Results Tab
 View historical backtest results
 
 Compare performance across tests
@@ -286,7 +297,7 @@ Compare performance across tests
 Delete individual or all results
 
 ⚙️ Technical Details
-Backtesting Engine
+⚡ Backtesting Engine
 The engine simulates realistic trading conditions:
 
 python
@@ -299,17 +310,17 @@ engine = BacktestEngine(
 )
 Key Features:
 
-Position sizing based on available capital
+📊 Position sizing based on available capital
 
-Commission applied on entry and exit
+💰 Commission applied on entry and exit
 
-Slippage simulation for realistic fills
+📉 Slippage simulation for realistic fills
 
-Equity curve tracking with drawdown calculation
+📈 Equity curve tracking with drawdown calculation
 
-Comprehensive trade logging
+📋 Comprehensive trade logging
 
-Pattern Detection
+🔍 Pattern Detection
 python
 # Pattern detection with threshold
 detector = PatternDetector(threshold=0.5)
@@ -319,14 +330,14 @@ df_with_patterns = detector.detect_all_patterns(df)
 signal, pattern_name = detector.get_signal(row, patterns_to_use)
 Threshold Explanation:
 
-0.0: Maximum sensitivity (more false signals)
+0.0: 🔍 Maximum sensitivity (more false signals)
 
-0.5: Default (TA-Lib standard)
+0.5: ⚖️ Default (TA-Lib standard)
 
-1.0: Minimum sensitivity (fewer, stronger signals)
+1.0: 🎯 Minimum sensitivity (fewer, stronger signals)
 
-Data Sources
-MOEX Client
+🌐 Data Sources
+🇷🇺 MOEX Client
 Uses MOEX ISS API
 
 Supports OHLC data with realistic wick generation
@@ -335,7 +346,7 @@ Fallback to close-only data with synthesized OHLC
 
 Board: TQBR, Engine: stock, Market: shares
 
-Crypto Client (Bybit)
+₿ Crypto Client (Bybit)
 PyBit unified trading API
 
 Testnet and mainnet support
@@ -345,37 +356,37 @@ Spot market data
 Automatic pagination for large date ranges
 
 📈 Performance Metrics Calculated
-Return Metrics
-Total Return (%)
+📊 Return Metrics
+📈 Total Return (%)
 
-Average ROI per Trade (%)
+📊 Average ROI per Trade (%)
 
-Sharpe Ratio (annualized)
+⚖️ Sharpe Ratio (annualized)
 
-Profit Factor (Gross Profit / Gross Loss)
+📉 Profit Factor (Gross Profit / Gross Loss)
 
-Risk Metrics
-Maximum Drawdown (%)
+⚠️ Risk Metrics
+📉 Maximum Drawdown (%)
 
-Standard Deviation of P&L
+📊 Standard Deviation of P&L
 
-Consecutive Wins/Losses
+🔢 Consecutive Wins/Losses
 
-Average Trade Duration
+⏱️ Average Trade Duration
 
-Trade Statistics
-Total Trades
+📋 Trade Statistics
+🔢 Total Trades
 
-Win Rate (%)
+📈 Win Rate (%)
 
-Average Win/Loss
+📊 Average Win/Loss
 
-Long/Short Distribution
+↔️ Long/Short Distribution
 
-Pattern-specific Statistics
+🔍 Pattern-specific Statistics
 
 🔍 Advanced Features
-Debug Mode
+🐛 Debug Mode
 Enable via "Debug Mode" button
 
 Detailed logging of trade decisions
@@ -384,60 +395,60 @@ Capital tracking verification
 
 Pattern detection details
 
-Database Operations
+🗃️ Database Operations
 python
 # Bulk operations available
 db.delete_all_strategies()      # Delete all strategies
 db.delete_all_backtest_results() # Delete all results
 db.clean_database()             # Complete database reset
-Custom Indicators
+📊 Custom Indicators
 The visualization system supports:
 
-MACD (12, 26, 9)
+📈 MACD (12, 26, 9)
 
-RSI (14 period)
+⚡ RSI (14 period)
 
-Volume with color coding
+📊 Volume with color coding
 
-Custom trade markers for entry/exit points
+📍 Custom trade markers for entry/exit points
 
 🐛 Troubleshooting
-Common Issues
-No Data Fetched
+❗ Common Issues
+❌ No Data Fetched
 
-Check internet connection
+🌐 Check internet connection
 
-Verify ticker/symbol is correct
+🔍 Verify ticker/symbol is correct
 
-Ensure date range is valid
+📅 Ensure date range is valid
 
-Check API keys for crypto (if using)
+🔑 Check API keys for crypto (if using)
 
-Chart Not Displaying
+📊 Chart Not Displaying
 
-Verify Plotly installation
+📦 Verify Plotly installation
 
-Check browser pop-up settings
+🌐 Check browser pop-up settings
 
-Ensure sufficient data points
+📊 Ensure sufficient data points
 
-Database Errors
+🗃️ Database Errors
 
-Check file permissions
+🔒 Check file permissions
 
-Verify SQLite installation
+📦 Verify SQLite installation
 
-Check disk space
+💾 Check disk space
 
-Pattern Detection Issues
+🔍 Pattern Detection Issues
 
-Adjust threshold slider
+🎚️ Adjust threshold slider
 
-Ensure sufficient historical data
+📅 Ensure sufficient historical data
 
-Verify TA-Lib installation
+📦 Verify TA-Lib installation
 
-Log Files
+📝 Log Files
 Application logs are stored in logs/ directory:
 
 app.log - General application logs
@@ -449,14 +460,14 @@ user.log - User actions
 Logs rotate weekly (Monday)
 
 📚 API Reference
-MOEX API
+🇷🇺 MOEX API
 Base URL: https://iss.moex.com/iss/
 
 Endpoint: engines/stock/markets/shares/boards/TQBR/securities/{ticker}/candles.json
 
 Parameters: from, till, interval, candles.columns
 
-Bybit API
+₿ Bybit API
 Category: spot
 
 Endpoint: /v5/market/kline
@@ -464,8 +475,8 @@ Endpoint: /v5/market/kline
 Parameters: symbol, interval, start, end, limit
 
 🔮 Future Enhancements
-Planned Features
-Machine Learning Integration
+🚀 Planned Features
+🤖 Machine Learning Integration
 
 Pattern prediction models
 
@@ -473,66 +484,55 @@ Optimal parameter detection
 
 Risk-adjusted strategy optimization
 
-Additional Markets
+🌍 Additional Markets
 
-Forex pairs
+💱 Forex pairs
 
-US stocks
+🇺🇸 US stocks
 
-Futures contracts
+⏳ Futures contracts
 
-Advanced Analytics
+📊 Advanced Analytics
 
-Monte Carlo simulation
+🎲 Monte Carlo simulation
 
-Walk-forward analysis
+🚶 Walk-forward analysis
 
-Parameter optimization grid
+🔢 Parameter optimization grid
 
-Real-time Features
+⚡ Real-time Features
 
-Live pattern detection
+🔔 Live pattern detection
 
-Paper trading mode
+📝 Paper trading mode
 
-Alert system
+🚨 Alert system
 
-Enhanced Visualization
+📈 Enhanced Visualization
 
-3D pattern visualization
+🎨 3D pattern visualization
 
-Correlation matrices
+📊 Correlation matrices
 
-Heat maps of pattern performance
+🔥 Heat maps of pattern performance
 
-Pattern Description Completion
+📋 Pattern Description Completion
 Currently in progress:
 
-Detailed reliability ratings
+📊 Detailed reliability ratings
 
-Historical performance statistics
+📈 Historical performance statistics
 
-Market condition effectiveness
+🌤️ Market condition effectiveness
 
-Timeframe-specific recommendations
+⏱️ Timeframe-specific recommendations
 
-👥 Contributing
-While this project is fully developed by DeepSeek, suggestions and feedback are welcome:
+📄 License & Disclaimer
+⚖️ License: This project is developed by DeepSeek AI Assistant for educational and research purposes. Users are responsible for complying with applicable regulations when using this software for actual trading.
 
-Report bugs via issue tracker
+⚠️ DISCLAIMER: Trading involves substantial risk of loss. This software is for educational and research purposes only. Past performance does not guarantee future results. Always test strategies thoroughly before using real capital. The developers are not responsible for any financial losses incurred through the use of this software.
 
-Suggest new features
-
-Share pattern performance insights
-
-Provide market-specific optimizations
-
-📄 License
-This project is developed by DeepSeek AI Assistant for educational and research purposes. Users are responsible for complying with applicable regulations when using this software for actual trading.
-
-⚠️ Disclaimer
-Trading involves substantial risk of loss. This software is for educational and research purposes only. Past performance does not guarantee future results. Always test strategies thoroughly before using real capital. The developers are not responsible for any financial losses incurred through the use of this software.
-
-Last Updated: February 2026
-Developed by: DeepSeek AI Assistant
-Project Status: Active Development
+📅 Last Updated: February 2026
+🤖 Developed by: DeepSeek AI Assistant
+🚀 Project Status: Active Development
+⭐ If you find this project useful, please give it a star!
