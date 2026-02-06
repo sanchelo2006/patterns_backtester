@@ -15,7 +15,7 @@
   - [4. Analyzing Results](#4-analyzing-results)
   - [5. Database Management](#5-database-management)
 - [⚙️ Technical Details](#️-technical-details)
-- [📈 Performance Metrics](#-performance-metrics)
+- [📈 Performance Metrics](#-performance-metrics-calculated)
 - [🔍 Advanced Features](#-advanced-features)
 - [🐛 Troubleshooting](#-troubleshooting)
 - [📚 API Reference](#-api-reference)
@@ -61,25 +61,40 @@ The **MOEX & Crypto Backtest System** is a comprehensive trading strategy backte
 - **🗃️ Database Integration**: Store and compare historical results
 
 ## 📁 Project Structure
-patterns_backtester/
-├── 📂 database/
-│ └── strategies.db # SQLite database for strategies and results
-├── 📂 logs/ # Application logs (rotated weekly)
-├── 📂 results/ # Excel export files
-├── 📂 src/
-│ ├── 📂 backtest/ # Backtesting engine and metrics
-│ ├── 📂 config/ # Configuration and settings
-│ ├── 📂 data/ # Data clients (MOEX, Crypto)
-│ ├── 📂 gui/ # PyQt5 GUI components
-│ ├── 📂 patterns/ # Pattern detection logic
-│ ├── 📂 strategies/ # Strategy definitions and rules
-│ ├── 📂 utils/ # Logging and utilities
-│ └── 📂 visualization/ # Charting and visualization
-├── main.py # Application entry point
-├── requirements.txt # Python dependencies
-└── README.md # This file
 
-text
+patterns_backtester/
+
+├── 📂 database/
+
+│ └── strategies.db # SQLite database for strategies and results
+
+├── 📂 logs/ # Application logs (rotated weekly)
+
+├── 📂 results/ # Excel export files
+
+├── 📂 src/
+
+│ ├── 📂 backtest/ # Backtesting engine and metrics
+
+│ ├── 📂 config/ # Configuration and settings
+
+│ ├── 📂 data/ # Data clients (MOEX, Crypto)
+
+│ ├── 📂 gui/ # PyQt5 GUI components
+
+│ ├── 📂 patterns/ # Pattern detection logic
+
+│ ├── 📂 strategies/ # Strategy definitions and rules
+
+│ ├── 📂 utils/ # Logging and utilities
+
+│ └── 📂 visualization/ # Charting and visualization
+
+├── main.py # Application entry point
+
+├── requirements.txt # Python dependencies
+
+└── README.md # This file
 
 ## 🔧 Installation & Setup
 
@@ -111,7 +126,7 @@ pip install -r requirements.txt
 Environment Configuration
 Create a .env file in the root directory:
 
-env
+.env
 # For Bybit Crypto Trading (optional)
 BYBIT_TESTNET=False
 BYBIT_API_KEY=your_api_key
@@ -120,12 +135,12 @@ Run the Application
 
 bash
 python main.py
-📊 Supported Candlestick Patterns
+## 📊 Supported Candlestick Patterns
 ⚠️ Note: Pattern descriptions are currently under development. Basic information is available, but detailed descriptions and reliability ratings are being refined.
 
 The system supports all 61 TA-Lib candlestick patterns:
 
-🕯️ Single Candle Patterns
+### 🕯️ Single Candle Patterns
 CDLDOJI - Indecision pattern
 
 CDLHAMMER - Bullish reversal
@@ -140,7 +155,7 @@ CDLMARUBOZU - Strong momentum
 
 CDLSPINNINGTOP - Indecision
 
-🕯️🕯️ Two Candle Patterns
+### 🕯️🕯️ Two Candle Patterns
 CDLENGULFING - Strong reversal
 
 CDLHARAMI - Potential reversal
@@ -151,7 +166,7 @@ CDLPIERCING - Bullish reversal
 
 CDLDARKCLOUDCOVER - Bearish reversal
 
-🕯️🕯️🕯️ Three Candle Patterns
+### 🕯️🕯️🕯️ Three Candle Patterns
 CDLMORNINGSTAR - Bullish reversal
 
 CDLEVENINGSTAR - Bearish reversal
@@ -162,7 +177,7 @@ CDL3BLACKCROWS - Strong bearish
 
 CDLIDENTICAL3CROWS - Very bearish
 
-🎭 Complex Patterns
+### 🎭 Complex Patterns
 CDLABANDONEDBABY - Rare but reliable reversal
 
 CDLKICKING - Gap-based reversal
@@ -173,10 +188,10 @@ CDLRISEFALL3METHODS - Continuation pattern
 
 CDLTRISTAR - Extreme indecision
 
-📋 Full pattern list available in the Help section of the application.
+### 📋 Full pattern list available in the Help section of the application.
 
-🎮 User Guide
-1. Creating a Strategy
+## 🎮 User Guide
+### 1. Creating a Strategy
 Click "New" in Strategy Management
 
 Enter a unique strategy name
@@ -215,7 +230,7 @@ Max Bars to Hold
 
 Click "Save"
 
-2. Fetching Market Data
+### 2. Fetching Market Data
 Select market type (MOEX or Cryptocurrency)
 
 Enter ticker/symbol:
@@ -232,7 +247,7 @@ Adjust pattern threshold (default 0.5)
 
 Click "Fetch Data"
 
-3. Running Backtest
+### 3. Running Backtest
 Select your strategy from dropdown
 
 Review parameters:
@@ -247,7 +262,7 @@ Click "Run Backtest"
 
 View results in the right panel
 
-4. Analyzing Results
+### 4. Analyzing Results
 📊 Performance Metrics
 💰 Capital: Initial/Final, Total Return %
 
@@ -279,7 +294,7 @@ Use Plotly controls to:
 
 📋 CSV Export: From database viewer
 
-5. Database Management
+### 5. Database Management
 Access via "View Database" button:
 
 🗂️ Strategies Tab
@@ -296,7 +311,7 @@ Compare performance across tests
 
 Delete individual or all results
 
-⚙️ Technical Details
+## ⚙️ Technical Details
 ⚡ Backtesting Engine
 The engine simulates realistic trading conditions:
 
@@ -355,7 +370,7 @@ Spot market data
 
 Automatic pagination for large date ranges
 
-📈 Performance Metrics Calculated
+## 📈 Performance Metrics Calculated
 📊 Return Metrics
 📈 Total Return (%)
 
@@ -385,7 +400,7 @@ Automatic pagination for large date ranges
 
 🔍 Pattern-specific Statistics
 
-🔍 Advanced Features
+## 🔍 Advanced Features
 🐛 Debug Mode
 Enable via "Debug Mode" button
 
@@ -412,7 +427,7 @@ The visualization system supports:
 
 📍 Custom trade markers for entry/exit points
 
-🐛 Troubleshooting
+## 🐛 Troubleshooting
 ❗ Common Issues
 ❌ No Data Fetched
 
@@ -459,7 +474,7 @@ user.log - User actions
 
 Logs rotate weekly (Monday)
 
-📚 API Reference
+## 📚 API Reference
 🇷🇺 MOEX API
 Base URL: https://iss.moex.com/iss/
 
@@ -474,7 +489,7 @@ Endpoint: /v5/market/kline
 
 Parameters: symbol, interval, start, end, limit
 
-🔮 Future Enhancements
+## 🔮 Future Enhancements
 🚀 Planned Features
 🤖 Machine Learning Integration
 
@@ -527,7 +542,7 @@ Currently in progress:
 
 ⏱️ Timeframe-specific recommendations
 
-📄 License & Disclaimer
+## 📄 License & Disclaimer
 ⚖️ License: This project is developed by DeepSeek AI Assistant for educational and research purposes. Users are responsible for complying with applicable regulations when using this software for actual trading.
 
 ⚠️ DISCLAIMER: Trading involves substantial risk of loss. This software is for educational and research purposes only. Past performance does not guarantee future results. Always test strategies thoroughly before using real capital. The developers are not responsible for any financial losses incurred through the use of this software.
