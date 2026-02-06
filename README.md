@@ -28,7 +28,7 @@
 
 The **MOEX & Crypto Backtest System** is a comprehensive trading strategy backtesting platform specifically designed for testing Japanese candlestick patterns on **MOEX (Moscow Exchange)** and **cryptocurrency markets**. The application provides a complete workflow from strategy creation to performance analysis with detailed visualization capabilities.
 
-- [📑 Table of Contents](#-table-of-contents)
+[📑 Table of Contents](#-table-of-contents)
 
 ## ✨ Key Features
 
@@ -61,6 +61,9 @@ The **MOEX & Crypto Backtest System** is a comprehensive trading strategy backte
 - **📍 Trade Markers**: Visual entry/exit points on charts
 - **📥 Excel Export**: Complete results with multiple sheets
 - **🗃️ Database Integration**: Store and compare historical results
+  
+
+[📑 Table of Contents](#-table-of-contents)
 
 ## 📁 Project Structure
 
@@ -98,6 +101,8 @@ patterns_backtester/
 
 └── README.md # This file
 
+[📑 Table of Contents](#-table-of-contents)
+
 ## 🔧 Installation & Setup
 
 ### 📋 **Prerequisites**
@@ -108,35 +113,65 @@ patterns_backtester/
 ### 🚀 **Step-by-Step Installation**
 
 1. **Clone the Repository**
-   ```bash
-   git clone <repository-url>
-   cd patterns_backtester
-Create Virtual Environment
+   
+bash
+   
+```bash
+
+git clone <repository-url>
+   
+cd patterns_backtester
+
+```
+   
+3. **Create Virtual Environment**
 
 bash
+
+```bash
 python -m venv .venv
+```
 
-# On Windows
+#### On Windows
+```bash
 .venv\Scripts\activate
+```
 
-# On macOS/Linux
+#### On macOS/Linux
+```bash
 source .venv/bin/activate
-Install Dependencies
+```
+
+3. **Install Dependencies**
 
 bash
+
+```bash
 pip install -r requirements.txt
-Environment Configuration
-Create a .env file in the root directory:
+```
 
+4. **create .env file in root directory (optional for Bybit Crypto Trading)**
+   
 .env
-# For Bybit Crypto Trading (optional)
+
+```python
 BYBIT_TESTNET=False
+
 BYBIT_API_KEY=your_api_key
+
 BYBIT_API_SECRET=your_api_secret
-Run the Application
+```
+
+5. **Run the Application**
 
 bash
+
+```bash
 python main.py
+```
+
+[📑 Table of Contents](#-table-of-contents)
+
 ## 📊 Supported Candlestick Patterns
 ⚠️ Note: Pattern descriptions are currently under development. Basic information is available, but detailed descriptions and reliability ratings are being refined.
 
@@ -192,15 +227,18 @@ CDLTRISTAR - Extreme indecision
 
 ### 📋 Full pattern list available in the Help section of the application.
 
+- [📑 Table of Contents](#-table-of-contents)
+
 ## 🎮 User Guide
 ### 1. Creating a Strategy
-Click "New" in Strategy Management
+
+1. Click "New" in Strategy Management
 
 Enter a unique strategy name
 
-Select patterns to include (Ctrl+Click for multiple)
+2. Select patterns to include (Ctrl+Click for multiple)
 
-Choose entry rule:
+3. Choose entry rule:
 
 OPEN_NEXT_CANDLE - Enter at next candle open
 
@@ -208,7 +246,7 @@ MIDDLE_OF_PATTERN - Enter at pattern midpoint
 
 CLOSE_PATTERN - Enter at pattern close
 
-Select exit rule:
+4. Select exit rule:
 
 STOP_LOSS_TAKE_PROFIT - Fixed SL/TP levels
 
@@ -220,7 +258,7 @@ TIMEBASED_EXIT - Exit after N bars
 
 TRAILING_STOP - Dynamic trailing stop
 
-Set risk parameters:
+5. Set risk parameters:
 
 Position Size (% of capital)
 
@@ -230,29 +268,31 @@ Take Profit (%)
 
 Max Bars to Hold
 
-Click "Save"
+6. Click "Save"
 
 ### 2. Fetching Market Data
-Select market type (MOEX or Cryptocurrency)
 
-Enter ticker/symbol:
+1. Select market type (MOEX or Cryptocurrency)
+
+2. Enter ticker/symbol:
 
 MOEX: SBER, GAZP, LKOH, etc.
 
 Crypto: BTCUSDT, ETHUSDT, XRPUSDT, etc.
 
-Choose timeframe (1m to Monthly)
+3. Choose timeframe (1m to Monthly)
 
-Set date range
+4. Set date range
 
-Adjust pattern threshold (default 0.5)
+5. Adjust pattern threshold (default 0.5)
 
-Click "Fetch Data"
+6. Click "Fetch Data"
 
 ### 3. Running Backtest
-Select your strategy from dropdown
 
-Review parameters:
+1. Select your strategy from dropdown
+
+2. Review parameters:
 
 Initial Capital (default: 1,000,000 RUB)
 
@@ -260,12 +300,14 @@ Commission % (default: 0.1%)
 
 Slippage % (default: 0.1%)
 
-Click "Run Backtest"
+3. Click "Run Backtest"
 
-View results in the right panel
+4. View results in the right panel
 
 ### 4. Analyzing Results
-📊 Performance Metrics
+
+1. 📊 Performance Metrics
+
 💰 Capital: Initial/Final, Total Return %
 
 📈 Trade Statistics: Total trades, Win Rate, Profit Factor
@@ -274,7 +316,8 @@ View results in the right panel
 
 🔍 Pattern Performance: Win rate by pattern type
 
-📈 Visualization Options
+2. 📈 Visualization Options
+
 Click "Show Chart" for interactive visualization
 
 Select indicators to display (Volume, MACD, RSI)
@@ -289,7 +332,8 @@ Use Plotly controls to:
 
 📏 Compare price levels
 
-💾 Export Options
+3. 💾 Export Options
+
 📥 Excel Export: Complete results with multiple sheets
 
 🗃️ Database Save: Store results for historical comparison
@@ -297,9 +341,11 @@ Use Plotly controls to:
 📋 CSV Export: From database viewer
 
 ### 5. Database Management
+
 Access via "View Database" button:
 
 🗂️ Strategies Tab
+
 View all saved strategies
 
 Edit or delete individual strategies
@@ -307,24 +353,28 @@ Edit or delete individual strategies
 Export to CSV
 
 📋 Results Tab
+
 View historical backtest results
 
 Compare performance across tests
 
 Delete individual or all results
 
+- [📑 Table of Contents](#-table-of-contents)
+
 ## ⚙️ Technical Details
 ⚡ Backtesting Engine
 The engine simulates realistic trading conditions:
 
-python
-# Core components
+```python
 engine = BacktestEngine(
     initial_capital=1000000,
     position_size_pct=10,      # % of capital per trade
     commission=0.001,          # 0.1% commission
     slippage=0.001            # 0.1% slippage
 )
+```
+
 Key Features:
 
 📊 Position sizing based on available capital
@@ -338,13 +388,16 @@ Key Features:
 📋 Comprehensive trade logging
 
 🔍 Pattern Detection
-python
-# Pattern detection with threshold
+
+```python
+#pattern detection with threshould
 detector = PatternDetector(threshold=0.5)
 df_with_patterns = detector.detect_all_patterns(df)
 
-# Signal generation
+#Signal generation
 signal, pattern_name = detector.get_signal(row, patterns_to_use)
+```
+
 Threshold Explanation:
 
 0.0: 🔍 Maximum sensitivity (more false signals)
@@ -354,17 +407,16 @@ Threshold Explanation:
 1.0: 🎯 Minimum sensitivity (fewer, stronger signals)
 
 🌐 Data Sources
+
 🇷🇺 MOEX Client
+
 Uses MOEX ISS API
-
-Supports OHLC data with realistic wick generation
-
-Fallback to close-only data with synthesized OHLC
 
 Board: TQBR, Engine: stock, Market: shares
 
 ₿ Crypto Client (Bybit)
-PyBit unified trading API
+
+Bybit unified trading API
 
 Testnet and mainnet support
 
@@ -372,8 +424,11 @@ Spot market data
 
 Automatic pagination for large date ranges
 
+- [📑 Table of Contents](#-table-of-contents)
+
 ## 📈 Performance Metrics Calculated
-📊 Return Metrics
+📊 Return Metrics:
+
 📈 Total Return (%)
 
 📊 Average ROI per Trade (%)
@@ -382,7 +437,8 @@ Automatic pagination for large date ranges
 
 📉 Profit Factor (Gross Profit / Gross Loss)
 
-⚠️ Risk Metrics
+⚠️ Risk Metrics:
+
 📉 Maximum Drawdown (%)
 
 📊 Standard Deviation of P&L
@@ -391,7 +447,8 @@ Automatic pagination for large date ranges
 
 ⏱️ Average Trade Duration
 
-📋 Trade Statistics
+📋 Trade Statistics:
+
 🔢 Total Trades
 
 📈 Win Rate (%)
@@ -401,6 +458,8 @@ Automatic pagination for large date ranges
 ↔️ Long/Short Distribution
 
 🔍 Pattern-specific Statistics
+
+- [📑 Table of Contents](#-table-of-contents)
 
 ## 🔍 Advanced Features
 🐛 Debug Mode
@@ -428,6 +487,8 @@ The visualization system supports:
 📊 Volume with color coding
 
 📍 Custom trade markers for entry/exit points
+
+- [📑 Table of Contents](#-table-of-contents)
 
 ## 🐛 Troubleshooting
 ❗ Common Issues
@@ -476,6 +537,8 @@ user.log - User actions
 
 Logs rotate weekly (Monday)
 
+- [📑 Table of Contents](#-table-of-contents)
+
 ## 📚 API Reference
 🇷🇺 MOEX API
 Base URL: https://iss.moex.com/iss/
@@ -490,6 +553,8 @@ Category: spot
 Endpoint: /v5/market/kline
 
 Parameters: symbol, interval, start, end, limit
+
+- [📑 Table of Contents](#-table-of-contents)
 
 ## 🔮 Future Enhancements
 🚀 Planned Features
@@ -543,6 +608,8 @@ Currently in progress:
 🌤️ Market condition effectiveness
 
 ⏱️ Timeframe-specific recommendations
+
+- [📑 Table of Contents](#-table-of-contents)
 
 ## 📄 License & Disclaimer
 ⚖️ License: This project is developed by DeepSeek AI Assistant for educational and research purposes. Users are responsible for complying with applicable regulations when using this software for actual trading.
