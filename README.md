@@ -462,7 +462,7 @@ Automatic pagination for large date ranges
 - [📑 Table of Contents](#-table-of-contents)
 
 ## 🔍 Advanced Features
-🐛 Debug Mode
+🐛 Debug Mode:
 Enable via "Debug Mode" button
 
 Detailed logging of trade decisions
@@ -471,13 +471,17 @@ Capital tracking verification
 
 Pattern detection details
 
-🗃️ Database Operations
-python
+🗃️ Database Operations:
+
+```python
 # Bulk operations available
 db.delete_all_strategies()      # Delete all strategies
 db.delete_all_backtest_results() # Delete all results
 db.clean_database()             # Complete database reset
-📊 Custom Indicators
+```
+
+📊 Custom Indicators:
+
 The visualization system supports:
 
 📈 MACD (12, 26, 9)
@@ -492,7 +496,8 @@ The visualization system supports:
 
 ## 🐛 Troubleshooting
 ❗ Common Issues
-❌ No Data Fetched
+
+❌ **No Data Fetched**:
 
 🌐 Check internet connection
 
@@ -502,7 +507,7 @@ The visualization system supports:
 
 🔑 Check API keys for crypto (if using)
 
-📊 Chart Not Displaying
+📊 **Chart Not Displaying**:
 
 📦 Verify Plotly installation
 
@@ -510,7 +515,7 @@ The visualization system supports:
 
 📊 Ensure sufficient data points
 
-🗃️ Database Errors
+🗃️ **Database Errors**:
 
 🔒 Check file permissions
 
@@ -518,7 +523,7 @@ The visualization system supports:
 
 💾 Check disk space
 
-🔍 Pattern Detection Issues
+🔍 **Pattern Detection Issues**:
 
 🎚️ Adjust threshold slider
 
@@ -527,6 +532,7 @@ The visualization system supports:
 📦 Verify TA-Lib installation
 
 📝 Log Files
+
 Application logs are stored in logs/ directory:
 
 app.log - General application logs
@@ -540,7 +546,9 @@ Logs rotate weekly (Monday)
 - [📑 Table of Contents](#-table-of-contents)
 
 ## 📚 API Reference
+
 🇷🇺 MOEX API
+
 Base URL: https://iss.moex.com/iss/
 
 Endpoint: engines/stock/markets/shares/boards/TQBR/securities/{ticker}/candles.json
@@ -548,6 +556,7 @@ Endpoint: engines/stock/markets/shares/boards/TQBR/securities/{ticker}/candles.j
 Parameters: from, till, interval, candles.columns
 
 ₿ Bybit API
+
 Category: spot
 
 Endpoint: /v5/market/kline
@@ -557,8 +566,10 @@ Parameters: symbol, interval, start, end, limit
 - [📑 Table of Contents](#-table-of-contents)
 
 ## 🔮 Future Enhancements
-🚀 Planned Features
-🤖 Machine Learning Integration
+
+🚀 Planned Features:
+
+🤖 **Machine Learning Integration**
 
 Pattern prediction models
 
@@ -566,7 +577,7 @@ Optimal parameter detection
 
 Risk-adjusted strategy optimization
 
-🌍 Additional Markets
+🌍 **Additional Markets**
 
 💱 Forex pairs
 
@@ -574,7 +585,7 @@ Risk-adjusted strategy optimization
 
 ⏳ Futures contracts
 
-📊 Advanced Analytics
+📊 **Advanced Analytics**
 
 🎲 Monte Carlo simulation
 
@@ -588,7 +599,7 @@ Risk-adjusted strategy optimization
 
 📝 Paper trading mode
 
-🚨 Alert system
+🚨 **Alert system**
 
 📈 Enhanced Visualization
 
@@ -599,15 +610,6 @@ Risk-adjusted strategy optimization
 🔥 Heat maps of pattern performance
 
 📋 Pattern Description Completion
-Currently in progress:
-
-📊 Detailed reliability ratings
-
-📈 Historical performance statistics
-
-🌤️ Market condition effectiveness
-
-⏱️ Timeframe-specific recommendations
 
 - [📑 Table of Contents](#-table-of-contents)
 
@@ -620,3 +622,4 @@ Currently in progress:
 🤖 Developed by: DeepSeek AI Assistant
 🚀 Project Status: Active Development
 ⭐ If you find this project useful, please give it a star!
+for questions and suggestions please use e-mail adress: sanchelo2006@yandex.ru
