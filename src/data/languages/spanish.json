@@ -1,0 +1,35 @@
+{
+    "app_name": "Sistema de Backtesting MOEX y Criptomonedas",
+    "help_title": "Ayuda - Explicaciones de Patrones",
+    "select_pattern": "Seleccione un patrón para ver detalles",
+    "search_placeholder": "Buscar patrones...",
+    "search_label": "Buscar:",
+    "application_help": "Ayuda de la Aplicación",
+    "interpretation": "Interpretación:",
+    "reliability": "Fiabilidad",
+    "category": "Categoría",
+    "type": "Tipo de Patrón",
+    "direction": "Dirección",
+    "app_help_title": "Ayuda de la Aplicación",
+    "app_help_content": "<h1>Sistema de Backtesting MOEX y Criptomonedas - Ayuda</h1>\n\n<h2>1. Descripción General de la Aplicación</h2>\n<p>Esta aplicación permite realizar backtesting de estrategias de trading basadas en patrones de velas japonesas en los mercados MOEX y de criptomonedas.</p>\n\n<h2>2. Cómo Empezar</h2>\n<h3>Paso 1: Crear una Estrategia</h3>\n<ul>\n    <li>Haga clic en \"Nueva\" en Gestión de Estrategias</li>\n    <li>Asigne un nombre a su estrategia</li>\n    <li>Seleccione los patrones a incluir</li>\n    <li>Elija reglas de entrada y salida</li>\n    <li>Establezca los parámetros de riesgo</li>\n    <li>Haga clic en \"Guardar\"</li>\n</ul>\n\n<h2>3. Explicaciones de Patrones</h2>\n<p>Use el panel izquierdo para explorar los 61 patrones de velas...</p>",
+    "patterns": {
+      "CDL2CROWS": {
+        "description": "Dos Cuervos: Patrón de reversión bajista que consta de tres velas en una tendencia alcista.",
+        "interpretation": "Señal de reversión bajista que indica un posible cambio de tendencia.",
+        "reliability": "Media",
+        "category": "Reversión",
+        "type": "Patrón de tres velas",
+        "direction": "Bajista",
+        "components": 3
+      },
+      "CDL3BLACKCROWS": {
+        "description": "Tres Cuervos Negros: Tres velas negras largas consecutivas que cierran por debajo de la anterior.",
+        "interpretation": "Fuerte señal de reversión bajista después de una tendencia alcista.",
+        "reliability": "Alta",
+        "category": "Reversión",
+        "type": "Patrón de tres velas",
+        "direction": "Bajista",
+        "components": 3
+      }
+    }
+  }

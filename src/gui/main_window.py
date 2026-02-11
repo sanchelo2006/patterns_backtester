@@ -252,6 +252,9 @@ class BacktestApp(QMainWindow):
         panel = QGroupBox("Actions")
         layout = QVBoxLayout()
 
+        self.help_btn = QPushButton("Help / Помощь / Ayuda")
+        self.help_btn.clicked.connect(self.show_help)
+
         # Row 1
         row1 = QHBoxLayout()
 

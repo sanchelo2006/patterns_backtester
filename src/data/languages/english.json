@@ -1,0 +1,35 @@
+{
+    "app_name": "MOEX & Crypto Backtest System",
+    "help_title": "Help - Pattern Explanations",
+    "select_pattern": "Select a pattern to see details",
+    "search_placeholder": "Search patterns...",
+    "search_label": "Search:",
+    "application_help": "Application Help",
+    "interpretation": "Interpretation:",
+    "reliability": "Reliability",
+    "category": "Category",
+    "type": "Pattern Type",
+    "direction": "Direction",
+    "app_help_title": "Application Help",
+    "app_help_content": "<h1>MOEX & Crypto Backtest System - Help</h1>\n\n<h2>1. Application Overview</h2>\n<p>This application allows you to backtest trading strategies based on Japanese candlestick patterns on MOEX and cryptocurrency markets.</p>\n\n<h2>2. Getting Started</h2>\n<h3>Step 1: Create a Strategy</h3>\n<ul>\n    <li>Click \"New\" in Strategy Management</li>\n    <li>Give your strategy a name</li>\n    <li>Select patterns to include</li>\n    <li>Choose entry and exit rules</li>\n    <li>Set risk parameters</li>\n    <li>Click \"Save\"</li>\n</ul>\n\n<h2>3. Pattern Explanations</h2>\n<p>Use the left panel to browse all 61 candlestick patterns...</p>",
+    "patterns": {
+      "CDL2CROWS": {
+        "description": "Two Crows pattern: A bearish reversal pattern consisting of three candles in an uptrend.",
+        "interpretation": "Bearish reversal signal indicating potential trend change.",
+        "reliability": "Medium",
+        "category": "Reversal",
+        "type": "Three-candle pattern",
+        "direction": "Bearish",
+        "components": 3
+      },
+      "CDL3BLACKCROWS": {
+        "description": "Three Black Crows: Three consecutive long black candles closing lower than previous.",
+        "interpretation": "Strong bearish reversal signal after an uptrend.",
+        "reliability": "High",
+        "category": "Reversal",
+        "type": "Three-candle pattern",
+        "direction": "Bearish",
+        "components": 3
+      }
+    }
+  }

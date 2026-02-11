@@ -1,6 +1,6 @@
 {
   "CDL2CROWS": {
-    "description": "CDL2CROWS: Japanese candlestick pattern for technical analysis.",
+    "description": "TWO_CROWS: Japanese candlestick pattern for technical analysis.",
     "interpretation": "Trading signal based on price action analysis.",
     "reliability": "Medium",
     "category": "Reversal",

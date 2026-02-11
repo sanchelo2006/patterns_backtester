@@ -10,571 +10,208 @@ from src.utils.logger import get_logger
 logger = get_logger('app')
 
 
-class PatternDiagram(QWidget):
-    """Widget to draw accurate pattern diagrams"""
+class PatternImageDisplay(QWidget):
+    """Widget to display pattern images"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.pattern_name = ""
-        self.pattern_data = {}
+        self.image_path = None
         self.setMinimumHeight(250)
         self.setMinimumWidth(500)
 
-    def set_pattern(self, pattern_name: str, pattern_data: dict = None):
-        """Set pattern to draw"""
+    def set_pattern(self, pattern_name: str):
+        """Set pattern to display"""
         self.pattern_name = pattern_name
-        self.pattern_data = pattern_data or {}
+        self.image_path = self.find_pattern_image(pattern_name)
         self.update()
 
+    def find_pattern_image(self, pattern_name: str) -> Path:
+        """Find image for the pattern"""
+        # Define possible image directories
+        image_dirs = [
+            Path(__file__).parent.parent.parent / 'data' / 'patterns_images',
+            Path(__file__).parent.parent / 'data' / 'patterns_images',
+            Path('data/patterns_images'),
+            Path('patterns_images')
+        ]
+
+        # Define possible image extensions
+        extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp']
+
+        for image_dir in image_dirs:
+            if image_dir.exists():
+                for ext in extensions:
+                    image_path = image_dir / f"{self.pattern_name}{ext}"
+                    if image_path.exists():
+                        return image_path
+
+        return None
+
     def paintEvent(self, event):
-        """Draw pattern diagram"""
+        """Display pattern image or placeholder"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
         # Clear background
-        painter.fillRect(self.rect(), QColor(255, 255, 255))
+        painter.fillRect(self.rect(), QColor(240, 240, 240))
 
         if not self.pattern_name:
             # Draw empty state
             painter.setPen(QColor(100, 100, 100))
             painter.setFont(QFont("Arial", 12))
-            painter.drawText(self.rect(), Qt.AlignCenter, "Select a pattern to see diagram")
+            painter.drawText(self.rect(), Qt.AlignCenter, "Select a pattern to see image")
             return
 
-        # Draw based on pattern type
-        width = self.width()
-        height = self.height()
+        if self.image_path and self.image_path.exists():
+            try:
+                # Load and display image
+                pixmap = QPixmap(str(self.image_path))
 
-        # Draw title
+                # Scale image to fit widget while maintaining aspect ratio
+                scaled_pixmap = pixmap.scaled(
+                    self.width() - 40,
+                    self.height() - 40,
+                    Qt.KeepAspectRatio,
+                    Qt.SmoothTransformation
+                )
+
+                # Calculate position to center the image
+                x = (self.width() - scaled_pixmap.width()) // 2
+                y = (self.height() - scaled_pixmap.height()) // 2
+
+                painter.drawPixmap(x, y, scaled_pixmap)
+
+            except Exception as e:
+                logger.error(f"Error loading image {self.image_path}: {str(e)}")
+                self.draw_placeholder(painter, f"Error loading image: {str(e)}")
+        else:
+            # Draw placeholder if no image found
+            self.draw_placeholder(painter, f"No image found for: {self.pattern_name}")
+
+    def draw_placeholder(self, painter, message: str):
+        """Draw placeholder when no image is available"""
+        painter.setPen(QColor(150, 150, 150))
+        painter.setFont(QFont("Arial", 10))
+
+        # Draw placeholder box
+        painter.setBrush(QColor(255, 255, 255))
+        painter.setPen(QPen(QColor(200, 200, 200), 2))
+        painter.drawRect(20, 20, self.width() - 40, self.height() - 40)
+
+        # Draw pattern name
         painter.setPen(QColor(0, 0, 0))
-        painter.setFont(QFont("Arial", 12, QFont.Bold))
-        painter.drawText(10, 25, f"Pattern: {self.pattern_name}")
+        painter.setFont(QFont("Arial", 14, QFont.Bold))
+        painter.drawText(self.rect().adjusted(0, 50, 0, 0), Qt.AlignCenter, self.pattern_name)
 
-        # Get pattern components
-        components = self.pattern_data.get('components', 1)
+        # Draw message
+        painter.setPen(QColor(100, 100, 100))
+        painter.setFont(QFont("Arial", 10))
+        painter.drawText(self.rect().adjusted(0, 100, 0, 0), Qt.AlignCenter, message)
 
-        # Calculate positions for candles
-        candle_width = 20
-        candle_spacing = 30
-        start_x = (width - (components * candle_width + (components - 1) * candle_spacing)) // 2
-        center_y = height // 2 + 20
+        # Draw instruction
+        painter.setPen(QColor(50, 100, 200))
+        painter.setFont(QFont("Arial", 9))
+        instruction = "Place pattern image in data/patterns_images/ folder"
+        painter.drawText(self.rect().adjusted(0, 150, 0, 0), Qt.AlignCenter, instruction)
 
-        # Draw each candle based on pattern type
-        if 'DOJI' in self.pattern_name:
-            self.draw_doji_pattern(painter, start_x, center_y, candle_width, self.pattern_name)
-        elif 'HAMMER' in self.pattern_name:
-            self.draw_hammer_pattern(painter, start_x, center_y, candle_width, self.pattern_name)
-        elif 'HANGINGMAN' in self.pattern_name:
-            self.draw_hangingman_pattern(painter, start_x, center_y, candle_width)
-        elif 'ENGULFING' in self.pattern_name:
-            self.draw_engulfing_pattern(painter, start_x, center_y, candle_width, components)
-        elif 'STAR' in self.pattern_name:
-            self.draw_star_pattern(painter, start_x, center_y, candle_width, components, self.pattern_name)
-        elif 'MARUBOZU' in self.pattern_name:
-            self.draw_marubozu_pattern(painter, start_x, center_y, candle_width, self.pattern_name)
-        elif 'HARAMI' in self.pattern_name:
-            self.draw_harami_pattern(painter, start_x, center_y, candle_width, components)
-        elif 'CROWS' in self.pattern_name:
-            self.draw_crows_pattern(painter, start_x, center_y, candle_width, components, self.pattern_name)
-        elif 'SOLDIERS' in self.pattern_name:
-            self.draw_soldiers_pattern(painter, start_x, center_y, candle_width, components)
-        elif 'BELTHOLD' in self.pattern_name:
-            self.draw_belthold_pattern(painter, start_x, center_y, candle_width, self.pattern_data.get('direction', 'Both'))
-        else:
-            self.draw_generic_pattern(painter, start_x, center_y, candle_width, components)
 
-    def draw_doji_pattern(self, painter, start_x, center_y, candle_width, pattern_name):
-        """Draw doji pattern"""
-        if 'DRAGONFLY' in pattern_name:
-            # Dragonfly Doji
-            x = start_x + candle_width // 2
-            # Long lower shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - 10, x, center_y + 40)
-            # Small body at top
-            painter.drawLine(x - 8, center_y - 10, x + 8, center_y - 10)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 40, center_y + 60, "Dragonfly Doji")
+class LanguageManager:
+    """Manages language loading and switching"""
 
-        elif 'GRAVESTONE' in pattern_name:
-            # Gravestone Doji
-            x = start_x + candle_width // 2
-            # Long upper shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - 40, x, center_y + 10)
-            # Small body at bottom
-            painter.drawLine(x - 8, center_y + 10, x + 8, center_y + 10)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 40, center_y + 60, "Gravestone Doji")
+    def __init__(self):
+        self.languages_dir = Path(__file__).parent.parent / 'data' / 'languages'
+        self.languages_dir.mkdir(parents=True, exist_ok=True)
+        self.current_language = "english"
+        self.translations = {}
+        self.available_languages = ["english", "russian", "spanish"]
+        self.load_all_languages()
 
-        elif 'LONGLEGGED' in pattern_name:
-            # Long-legged Doji
-            x = start_x + candle_width // 2
-            # Long upper and lower shadows
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - 40, x, center_y + 40)
-            # Small body in middle
-            painter.drawLine(x - 8, center_y, x + 8, center_y)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 40, center_y + 70, "Long-legged Doji")
-
-        else:
-            # Regular Doji
-            x = start_x + candle_width // 2
-            # Moderate shadows
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - 20, x, center_y + 20)
-            # Cross body
-            painter.drawLine(x - 10, center_y, x + 10, center_y)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 20, center_y + 50, "Doji")
-
-    def draw_hammer_pattern(self, painter, start_x, center_y, candle_width, pattern_name):
-        """Draw hammer or hanging man pattern"""
-        x = start_x + candle_width // 2
-
-        if 'INVERTED' in pattern_name:
-            # Inverted Hammer (bullish)
-            # Small body at bottom
-            painter.setBrush(QColor(100, 255, 100))  # Green for bullish
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x - 8, center_y, 16, 10)
-            # Long upper shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y, x, center_y - 40)
-            # Very small or no lower shadow
-            painter.drawLine(x, center_y + 10, x, center_y + 15)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 50, center_y + 50, "Inverted Hammer")
-
-        elif 'HANGINGMAN' in pattern_name:
-            # Hanging Man (bearish)
-            # Small body at top
-            painter.setBrush(QColor(255, 100, 100))  # Red for bearish
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x - 8, center_y - 10, 16, 10)
-            # Long lower shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y, x, center_y + 40)
-            # Very small upper shadow
-            painter.drawLine(x, center_y - 10, x, center_y - 15)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 50, center_y + 50, "Hanging Man")
-
-        else:
-            # Hammer (bullish)
-            # Small body at top
-            painter.setBrush(QColor(100, 255, 100))  # Green for bullish
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x - 8, center_y - 10, 16, 10)
-            # Long lower shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y, x, center_y + 40)
-            # Very small upper shadow
-            painter.drawLine(x, center_y - 10, x, center_y - 15)
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x - 30, center_y + 50, "Hammer")
-
-    def draw_hangingman_pattern(self, painter, start_x, center_y, candle_width):
-        """Draw hanging man pattern"""
-        x = start_x + candle_width // 2
-        # Small body at top (red for bearish)
-        painter.setBrush(QColor(255, 100, 100))
-        painter.setPen(QPen(QColor(200, 50, 50), 1))
-        painter.drawRect(x - 8, center_y - 10, 16, 10)
-        # Long lower shadow
-        painter.setPen(QPen(QColor(0, 0, 0), 2))
-        painter.drawLine(x, center_y, x, center_y + 40)
-        # Very small upper shadow
-        painter.drawLine(x, center_y - 10, x, center_y - 15)
-
-    def draw_engulfing_pattern(self, painter, start_x, center_y, candle_width, components):
-        """Draw engulfing pattern"""
-        # First candle (small)
-        x1 = start_x + candle_width // 2
-        if 'BULLISH' in self.pattern_name or self.pattern_data.get('direction') == 'Bullish':
-            # First candle red (bearish), second green (bullish)
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x1 - 6, center_y - 15, 12, 30)
-
-            # Second candle (engulfing, larger)
-            x2 = x1 + candle_width + 30
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x2 - 10, center_y - 20, 20, 40)
-
-            # Arrows
-            painter.setPen(QPen(QColor(0, 0, 255), 2))
-            painter.drawLine(x2 + 15, center_y, x2 + 30, center_y)
-            painter.setBrush(QColor(0, 0, 255))
-            painter.drawPolygon(QPolygon([
-                QPoint(x2 + 30, center_y),
-                QPoint(x2 + 25, center_y - 5),
-                QPoint(x2 + 25, center_y + 5)
-            ]))
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 10, center_y - 40, "1st")
-            painter.drawText(x2 - 15, center_y - 45, "2nd (Engulfing)")
-            painter.drawText(x2 + 35, center_y, "Bullish")
-        else:
-            # Bearish engulfing
-            # First candle green (bullish), second red (bearish)
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x1 - 6, center_y - 15, 12, 30)
-
-            # Second candle (engulfing, larger)
-            x2 = x1 + candle_width + 30
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x2 - 10, center_y - 20, 20, 40)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 10, center_y - 40, "1st")
-            painter.drawText(x2 - 15, center_y - 45, "2nd (Engulfing)")
-            painter.drawText(x2 + 35, center_y, "Bearish")
-
-    def draw_star_pattern(self, painter, start_x, center_y, candle_width, components, pattern_name):
-        """Draw star pattern"""
-        # First candle (long)
-        x1 = start_x + candle_width // 2
-        if 'EVENING' in pattern_name:
-            # Evening star (bearish)
-            # First candle green (bullish)
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x1 - 8, center_y - 25, 16, 50)
-
-            # Gap
-            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            painter.drawLine(x1 + 15, center_y, x1 + 25, center_y)
-
-            # Star candle (small, can be doji)
-            x2 = x1 + candle_width + 30
-            if 'DOJI' in pattern_name:
-                # Doji star
-                painter.setPen(QPen(QColor(0, 0, 0), 2))
-                painter.drawLine(x2, center_y - 10, x2, center_y + 10)
-                painter.drawLine(x2 - 8, center_y, x2 + 8, center_y)
+    def load_all_languages(self):
+        """Load all language files"""
+        for lang in self.available_languages:
+            file_path = self.languages_dir / f"{lang}.json"
+            if file_path.exists():
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        self.translations[lang] = json.load(f)
+                except Exception as e:
+                    logger.error(f"Error loading {lang} language: {str(e)}")
+                    self.translations[lang] = {}
             else:
-                # Small body star
-                painter.setBrush(QColor(255, 255, 200))
-                painter.setPen(QPen(QColor(200, 200, 150), 1))
-                painter.drawRect(x2 - 6, center_y - 10, 12, 20)
+                logger.warning(f"Language file not found: {file_path}")
+                self.translations[lang] = {}
 
-            # Gap
-            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            painter.drawLine(x2 + 15, center_y, x2 + 25, center_y)
+    def get_text(self, key: str, lang: str = None) -> str:
+        """Get translated text for a key"""
+        if lang is None:
+            lang = self.current_language
 
-            # Third candle (red, bearish)
-            x3 = x2 + candle_width + 30
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x3 - 8, center_y - 20, 16, 40)
+        # Try to get from current language
+        if lang in self.translations:
+            # Handle nested keys (e.g., "patterns.CDL2CROWS.description")
+            keys = key.split('.')
+            value = self.translations[lang]
 
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 20, center_y - 60, "Long Bullish")
-            painter.drawText(x2 - 10, center_y - 35, "Star")
-            painter.drawText(x3 - 10, center_y - 45, "Bearish")
-            painter.drawText(x1 + 40, center_y + 60, "Evening Star Pattern")
+            for k in keys:
+                if isinstance(value, dict) and k in value:
+                    value = value[k]
+                else:
+                    # Fallback to English if key not found
+                    if lang != "english":
+                        return self.get_text(key, "english")
+                    return key  # Return key itself as last resort
 
-        else:
-            # Morning star (bullish) - opposite colors
-            # First candle red (bearish)
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x1 - 8, center_y - 25, 16, 50)
+            # Ensure we return string, convert if needed
+            if isinstance(value, (int, float)):
+                return str(value)
+            return value if value is not None else key
 
-            # Gap
-            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            painter.drawLine(x1 + 15, center_y, x1 + 25, center_y)
+        # Fallback to English
+        if lang != "english":
+            return self.get_text(key, "english")
 
-            # Star candle (small, can be doji)
-            x2 = x1 + candle_width + 30
-            if 'DOJI' in pattern_name:
-                # Doji star
-                painter.setPen(QPen(QColor(0, 0, 0), 2))
-                painter.drawLine(x2, center_y - 10, x2, center_y + 10)
-                painter.drawLine(x2 - 8, center_y, x2 + 8, center_y)
-            else:
-                # Small body star
-                painter.setBrush(QColor(255, 255, 200))
-                painter.setPen(QPen(QColor(200, 200, 150), 1))
-                painter.drawRect(x2 - 6, center_y - 10, 12, 20)
+        return key
 
-            # Gap
-            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            painter.drawLine(x2 + 15, center_y, x2 + 25, center_y)
+    def set_language(self, lang: str):
+        """Set current language"""
+        if lang in self.available_languages:
+            self.current_language = lang
+            return True
+        return False
 
-            # Third candle (green, bullish)
-            x3 = x2 + candle_width + 30
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x3 - 8, center_y - 20, 16, 40)
+    def get_pattern_info(self, pattern_name: str) -> dict:
+        """Get pattern information in current language"""
+        base_info = {
+            'description': self.get_text(f"patterns.{pattern_name}.description"),
+            'interpretation': self.get_text(f"patterns.{pattern_name}.interpretation"),
+            'reliability': self.get_text(f"patterns.{pattern_name}.reliability"),
+            'category': self.get_text(f"patterns.{pattern_name}.category"),
+            'type': self.get_text(f"patterns.{pattern_name}.type"),
+            'direction': self.get_text(f"patterns.{pattern_name}.direction")
+        }
 
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 20, center_y - 60, "Long Bearish")
-            painter.drawText(x2 - 10, center_y - 35, "Star")
-            painter.drawText(x3 - 10, center_y - 45, "Bullish")
-            painter.drawText(x1 + 40, center_y + 60, "Morning Star Pattern")
+        # Parse components as integer
+        components_str = self.get_text(f"patterns.{pattern_name}.components")
+        try:
+            base_info['components'] = int(components_str)
+        except (ValueError, TypeError):
+            base_info['components'] = 1  # Default to 1 if cannot parse
 
-    def draw_marubozu_pattern(self, painter, start_x, center_y, candle_width, pattern_name):
-        """Draw marubozu pattern"""
-        x = start_x + candle_width // 2
-
-        if 'CLOSING' in pattern_name:
-            # Closing Marubozu
-            if self.pattern_data.get('direction') == 'Bullish':
-                painter.setBrush(QColor(100, 255, 100))
-                painter.setPen(QPen(QColor(50, 200, 50), 1))
-            else:
-                painter.setBrush(QColor(255, 100, 100))
-                painter.setPen(QPen(QColor(200, 50, 50), 1))
-
-            # Body with shadow only on open side
-            painter.drawRect(x - 10, center_y - 30, 20, 60)
-            # Small shadow on opening side
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            if self.pattern_data.get('direction') == 'Bullish':
-                painter.drawLine(x, center_y + 30, x, center_y + 35)
-            else:
-                painter.drawLine(x, center_y - 30, x, center_y - 35)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x - 40, center_y + 80, "Closing Marubozu")
-
-        else:
-            # Full Marubozu (no shadows)
-            if self.pattern_data.get('direction') == 'Bullish':
-                painter.setBrush(QColor(100, 255, 100))
-                painter.setPen(QPen(QColor(50, 200, 50), 1))
-            else:
-                painter.setBrush(QColor(255, 100, 100))
-                painter.setPen(QPen(QColor(200, 50, 50), 1))
-
-            # Body with no shadows
-            painter.drawRect(x - 10, center_y - 30, 20, 60)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x - 30, center_y + 80, "Marubozu (No shadows)")
-
-    def draw_harami_pattern(self, painter, start_x, center_y, candle_width, components):
-        """Draw harami pattern"""
-        # First candle (large)
-        x1 = start_x + candle_width // 2
-        if self.pattern_data.get('direction') == 'Bullish':
-            # Large bearish, small bullish inside
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x1 - 12, center_y - 30, 24, 60)
-
-            # Second candle (small, inside)
-            x2 = x1 + candle_width + 30
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x2 - 6, center_y - 15, 12, 30)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 15, center_y - 50, "Large Bearish")
-            painter.drawText(x2 - 10, center_y - 40, "Small Bullish Inside")
-
-        elif self.pattern_data.get('direction') == 'Bearish':
-            # Large bullish, small bearish inside
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x1 - 12, center_y - 30, 24, 60)
-
-            # Second candle (small, inside)
-            x2 = x1 + candle_width + 30
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x2 - 6, center_y - 15, 12, 30)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 15, center_y - 50, "Large Bullish")
-            painter.drawText(x2 - 10, center_y - 40, "Small Bearish Inside")
-
-        if 'CROSS' in self.pattern_name:
-            # Harami Cross - second candle is doji
-            x2 = x1 + candle_width + 30
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x2, center_y - 10, x2, center_y + 10)
-            painter.drawLine(x2 - 8, center_y, x2 + 8, center_y)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.drawText(x1 - 15, center_y + 80, "Harami Cross Pattern")
-
-    def draw_crows_pattern(self, painter, start_x, center_y, candle_width, components, pattern_name):
-        """Draw crows patterns"""
-        if '2CROWS' in pattern_name:
-            # Two Crows
-            x1 = start_x + candle_width // 2
-            # First candle (long white)
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            painter.drawRect(x1 - 10, center_y - 25, 20, 50)
-
-            # Gap up
-            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            painter.drawLine(x1 + 15, center_y, x1 + 25, center_y)
-
-            # Second candle (black, opens above, closes within first)
-            x2 = x1 + candle_width + 30
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            painter.drawRect(x2 - 8, center_y - 20, 16, 40)
-
-            # Third candle (black, opens within second, closes below first)
-            x3 = x2 + candle_width + 30
-            painter.drawRect(x3 - 8, center_y - 15, 16, 30)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x1 - 10, center_y - 40, "1st: White")
-            painter.drawText(x2 - 10, center_y - 35, "2nd: Black")
-            painter.drawText(x3 - 10, center_y - 30, "3rd: Black")
-            painter.drawText(x1 + 20, center_y + 70, "Two Crows Pattern")
-
-        elif '3BLACKCROWS' in pattern_name:
-            # Three Black Crows
-            for i in range(3):
-                x = start_x + i * (candle_width + 30) + candle_width // 2
-                painter.setBrush(QColor(255, 100, 100))
-                painter.setPen(QPen(QColor(200, 50, 50), 1))
-                # Each candle opens within previous body, closes lower
-                height = 40 - i * 5
-                y_offset = i * 5
-                painter.drawRect(x - 8, center_y - 20 + y_offset, 16, height)
-
-                # Shadows
-                painter.setPen(QPen(QColor(0, 0, 0), 1))
-                painter.drawLine(x, center_y - 20 + y_offset, x, center_y - 25 + y_offset)
-                painter.drawLine(x, center_y - 20 + y_offset + height, x, center_y - 15 + y_offset + height)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(start_x - 10, center_y - 40, "Three Black Crows")
-
-        elif 'IDENTICAL3CROWS' in pattern_name:
-            # Identical Three Crows (similar size)
-            for i in range(3):
-                x = start_x + i * (candle_width + 30) + candle_width // 2
-                painter.setBrush(QColor(255, 100, 100))
-                painter.setPen(QPen(QColor(200, 50, 50), 1))
-                # All candles same size
-                painter.drawRect(x - 8, center_y - 20 + i * 5, 16, 40)
-
-                # Shadows
-                painter.setPen(QPen(QColor(0, 0, 0), 1))
-                painter.drawLine(x, center_y - 20 + i * 5, x, center_y - 25 + i * 5)
-                painter.drawLine(x, center_y - 20 + i * 5 + 40, x, center_y - 15 + i * 5 + 40)
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(start_x - 10, center_y - 50, "Identical Three Crows")
-
-    def draw_soldiers_pattern(self, painter, start_x, center_y, candle_width, components):
-        """Draw three white soldiers pattern"""
-        for i in range(3):
-            x = start_x + i * (candle_width + 30) + candle_width // 2
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            # Each candle opens within previous body, closes higher
-            height = 40 + i * 5
-            y_offset = -i * 5
-            painter.drawRect(x - 8, center_y - 20 + y_offset, 16, height)
-
-            # Shadows
-            painter.setPen(QPen(QColor(0, 0, 0), 1))
-            painter.drawLine(x, center_y - 20 + y_offset, x, center_y - 25 + y_offset)
-            painter.drawLine(x, center_y - 20 + y_offset + height, x, center_y - 15 + y_offset + height)
-
-        painter.setFont(QFont("Arial", 8))
-        painter.setPen(QColor(0, 0, 0))
-        painter.drawText(start_x - 10, center_y - 50, "Three White Soldiers")
-
-    def draw_belthold_pattern(self, painter, start_x, center_y, candle_width, direction):
-        """Draw belt hold pattern"""
-        x = start_x + candle_width // 2
-
-        if direction == 'Bullish':
-            painter.setBrush(QColor(100, 255, 100))
-            painter.setPen(QPen(QColor(50, 200, 50), 1))
-            # Long white candle opening at low
-            painter.drawRect(x - 10, center_y - 30, 20, 60)
-            # No lower shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y + 30, x, center_y + 35)  # Small lower shadow
-            painter.drawLine(x, center_y - 30, x, center_y - 40)  # Upper shadow
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x - 30, center_y + 80, "Bullish Belt Hold")
-
-        else:  # Bearish
-            painter.setBrush(QColor(255, 100, 100))
-            painter.setPen(QPen(QColor(200, 50, 50), 1))
-            # Long black candle opening at high
-            painter.drawRect(x - 10, center_y - 30, 20, 60)
-            # No upper shadow
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - 30, x, center_y - 35)  # Small upper shadow
-            painter.drawLine(x, center_y + 30, x, center_y + 40)  # Lower shadow
-
-            painter.setFont(QFont("Arial", 8))
-            painter.setPen(QColor(0, 0, 0))
-            painter.drawText(x - 30, center_y + 80, "Bearish Belt Hold")
-
-    def draw_generic_pattern(self, painter, start_x, center_y, candle_width, components):
-        """Draw generic pattern representation"""
-        # Draw specified number of generic candles
-        for i in range(components):
-            x = start_x + i * (candle_width + 30) + candle_width // 2
-
-            # Alternate colors for visual clarity
-            if i % 2 == 0:
-                painter.setBrush(QColor(100, 255, 100))
-                painter.setPen(QPen(QColor(50, 200, 50), 1))
-            else:
-                painter.setBrush(QColor(255, 100, 100))
-                painter.setPen(QPen(QColor(200, 50, 50), 1))
-
-            # Draw candle body
-            body_height = 30 + (i * 5)
-            painter.drawRect(x - 8, center_y - body_height // 2, 16, body_height)
-
-            # Draw shadows
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
-            painter.drawLine(x, center_y - body_height // 2, x, center_y - body_height // 2 - 10)
-            painter.drawLine(x, center_y + body_height // 2, x, center_y + body_height // 2 + 10)
-
-        painter.setFont(QFont("Arial", 8))
-        painter.setPen(QColor(0, 0, 0))
-        painter.drawText(start_x - 10, center_y - 60, f"{components}-candle Pattern")
-        painter.drawText(start_x - 10, center_y + 70, self.pattern_name)
+        return base_info
 
 
 class HelpWindow(QMainWindow):
-    """Comprehensive help window with pattern explanations"""
+    """Comprehensive help window with multi-language support and image display"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Help - Pattern Explanations")
+        self.language_manager = LanguageManager()
+        self.setWindowTitle(self.language_manager.get_text("help_title"))
         self.setGeometry(150, 150, 1400, 900)
 
-        # Initialize pattern data first
-        self.pattern_data = {}
-        self.load_pattern_descriptions()
+        # Store references to UI elements for easy updating
+        self.ui_elements = {}
 
         self.init_ui()
 
@@ -589,13 +226,35 @@ class HelpWindow(QMainWindow):
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
+        # Language selection buttons
+        lang_layout = QHBoxLayout()
+
+        # Language buttons with flags
+        self.english_btn = QPushButton("🇺🇸 English")
+        self.english_btn.setCheckable(True)
+        self.english_btn.setChecked(True)
+        self.english_btn.clicked.connect(lambda: self.change_language("english"))
+        lang_layout.addWidget(self.english_btn)
+
+        self.russian_btn = QPushButton("🇷🇺 Русский")
+        self.russian_btn.setCheckable(True)
+        self.russian_btn.clicked.connect(lambda: self.change_language("russian"))
+        lang_layout.addWidget(self.russian_btn)
+
+        self.spanish_btn = QPushButton("🇪🇸 Español")
+        self.spanish_btn.setCheckable(True)
+        self.spanish_btn.clicked.connect(lambda: self.change_language("spanish"))
+        lang_layout.addWidget(self.spanish_btn)
+
+        left_layout.addLayout(lang_layout)
+
         # Search box
         search_layout = QHBoxLayout()
-        search_label = QLabel("Search:")
-        search_layout.addWidget(search_label)
+        self.search_label = QLabel(self.language_manager.get_text("search_label"))
+        search_layout.addWidget(self.search_label)
 
         self.search_box = QLineEdit()
-        self.search_box.setPlaceholderText("Search patterns...")
+        self.search_box.setPlaceholderText(self.language_manager.get_text("search_placeholder"))
         self.search_box.textChanged.connect(self.filter_patterns)
         search_layout.addWidget(self.search_box)
 
@@ -608,9 +267,9 @@ class HelpWindow(QMainWindow):
         left_layout.addWidget(self.pattern_list)
 
         # Application help button
-        app_help_btn = QPushButton("Application Help")
-        app_help_btn.clicked.connect(self.show_application_help)
-        left_layout.addWidget(app_help_btn)
+        self.app_help_btn = QPushButton(self.language_manager.get_text("application_help"))
+        self.app_help_btn.clicked.connect(self.show_application_help)
+        left_layout.addWidget(self.app_help_btn)
 
         left_layout.addStretch()
 
@@ -619,10 +278,14 @@ class HelpWindow(QMainWindow):
         right_layout = QVBoxLayout(right_panel)
 
         # Title
-        self.pattern_title = QLabel("Select a pattern to see details")
+        self.pattern_title = QLabel(self.language_manager.get_text("select_pattern"))
         self.pattern_title.setStyleSheet("font-size: 16px; font-weight: bold; color: #333;")
         self.pattern_title.setAlignment(Qt.AlignCenter)
         right_layout.addWidget(self.pattern_title)
+
+        # Pattern image display
+        self.pattern_image = PatternImageDisplay()
+        right_layout.addWidget(self.pattern_image)
 
         # Description text area
         self.description_text = QTextEdit()
@@ -630,14 +293,10 @@ class HelpWindow(QMainWindow):
         self.description_text.setFont(QFont("Arial", 10))
         right_layout.addWidget(self.description_text)
 
-        # Pattern diagram
-        self.pattern_diagram = PatternDiagram()
-        right_layout.addWidget(self.pattern_diagram)
-
         # Interpretation
-        interpretation_label = QLabel("Interpretation:")
-        interpretation_label.setStyleSheet("font-weight: bold; color: #555;")
-        right_layout.addWidget(interpretation_label)
+        self.interpretation_label = QLabel(self.language_manager.get_text("interpretation"))
+        self.interpretation_label.setStyleSheet("font-weight: bold; color: #555;")
+        right_layout.addWidget(self.interpretation_label)
 
         self.interpretation_text = QTextEdit()
         self.interpretation_text.setReadOnly(True)
@@ -648,40 +307,40 @@ class HelpWindow(QMainWindow):
         info_layout = QHBoxLayout()
 
         # Reliability
-        reliability_group = QGroupBox("Reliability")
+        self.reliability_group = QGroupBox(self.language_manager.get_text("reliability"))
         reliability_layout = QVBoxLayout()
         self.reliability_label = QLabel("N/A")
         self.reliability_label.setStyleSheet("font-size: 14px;")
         reliability_layout.addWidget(self.reliability_label)
-        reliability_group.setLayout(reliability_layout)
-        info_layout.addWidget(reliability_group)
+        self.reliability_group.setLayout(reliability_layout)
+        info_layout.addWidget(self.reliability_group)
 
         # Category
-        category_group = QGroupBox("Category")
+        self.category_group = QGroupBox(self.language_manager.get_text("category"))
         category_layout = QVBoxLayout()
         self.category_label = QLabel("N/A")
         self.category_label.setStyleSheet("font-size: 14px;")
         category_layout.addWidget(self.category_label)
-        category_group.setLayout(category_layout)
-        info_layout.addWidget(category_group)
+        self.category_group.setLayout(category_layout)
+        info_layout.addWidget(self.category_group)
 
         # Pattern Type
-        type_group = QGroupBox("Pattern Type")
+        self.type_group = QGroupBox(self.language_manager.get_text("type"))
         type_layout = QVBoxLayout()
         self.type_label = QLabel("N/A")
         self.type_label.setStyleSheet("font-size: 14px;")
         type_layout.addWidget(self.type_label)
-        type_group.setLayout(type_layout)
-        info_layout.addWidget(type_group)
+        self.type_group.setLayout(type_layout)
+        info_layout.addWidget(self.type_group)
 
         # Bullish/Bearish
-        direction_group = QGroupBox("Direction")
+        self.direction_group = QGroupBox(self.language_manager.get_text("direction"))
         direction_layout = QVBoxLayout()
         self.direction_label = QLabel("N/A")
         self.direction_label.setStyleSheet("font-size: 14px;")
         direction_layout.addWidget(self.direction_label)
-        direction_group.setLayout(direction_layout)
-        info_layout.addWidget(direction_group)
+        self.direction_group.setLayout(direction_layout)
+        info_layout.addWidget(self.direction_group)
 
         right_layout.addLayout(info_layout)
 
@@ -693,600 +352,57 @@ class HelpWindow(QMainWindow):
 
         layout.addWidget(splitter)
 
+        # Store references for easy updating
+        self.store_ui_references()
+
         # Select first pattern
         if self.pattern_list.count() > 0:
             self.pattern_list.setCurrentRow(0)
 
-    def load_pattern_descriptions(self):
-        """Load pattern descriptions from file"""
-        try:
-            # Try to load from JSON file
-            pattern_file = Path(__file__).parent.parent / 'data' / 'pattern_descriptions.json'
-
-            if pattern_file.exists():
-                with open(pattern_file, 'r', encoding='utf-8') as f:
-                    self.pattern_data = json.load(f)
-            else:
-                # Create basic descriptions
-                self.pattern_data = self.create_basic_descriptions()
-
-                # Save to file for future use
-                pattern_file.parent.mkdir(exist_ok=True)
-                with open(pattern_file, 'w', encoding='utf-8') as f:
-                    json.dump(self.pattern_data, f, indent=2, ensure_ascii=False)
-
-            logger.info(f"Loaded pattern descriptions")
-
-        except Exception as e:
-            logger.error(f"Error loading pattern descriptions: {str(e)}")
-            self.pattern_data = self.create_basic_descriptions()
-
-    def create_basic_descriptions(self):
-        """Create basic pattern descriptions"""
-        patterns = {}
-
-        # Pattern characteristics
-        pattern_info = {
-            'CDL2CROWS': {
-                'description': 'Two Crows pattern: A bearish reversal pattern consisting of three candles in an uptrend.',
-                'interpretation': 'Bearish reversal signal indicating potential trend change.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDL3BLACKCROWS': {
-                'description': 'Three Black Crows: Three consecutive long black candles closing lower than previous.',
-                'interpretation': 'Strong bearish reversal signal after an uptrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDL3INSIDE': {
-                'description': 'Three Inside Up/Down: A three-candle reversal pattern with a harami in first two candles.',
-                'interpretation': 'Bullish reversal (up) or bearish reversal (down) pattern.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDL3LINESTRIKE': {
-                'description': 'Three-Line Strike: A four-candle continuation pattern.',
-                'interpretation': 'Bullish (after downtrend) or bearish (after uptrend) continuation.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Four-candle pattern',
-                'direction': 'Both',
-                'components': 4
-            },
-            'CDL3OUTSIDE': {
-                'description': 'Three Outside Up/Down: Engulfing pattern followed by confirmation candle.',
-                'interpretation': 'Reversal pattern with stronger confirmation.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDL3WHITESOLDIERS': {
-                'description': 'Three White Soldiers: Three consecutive long white candles with higher closes.',
-                'interpretation': 'Strong bullish reversal signal after a downtrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bullish',
-                'components': 3
-            },
-            'CDLABANDONEDBABY': {
-                'description': 'Abandoned Baby: A doji star that gaps away from previous candle, followed by gap in opposite direction.',
-                'interpretation': 'Strong reversal signal, rare but reliable.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDLADVANCEBLOCK': {
-                'description': 'Advance Block: Three white candles with consecutively smaller bodies.',
-                'interpretation': 'Bearish reversal pattern in an uptrend, shows weakening bullish momentum.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLBELTHOLD': {
-                'description': 'Belt Hold: A long candle with no shadow on one side (opening at high for bullish, at low for bearish).',
-                'interpretation': 'Strong reversal signal when appearing at trend extremes.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Both',
-                'components': 1
-            },
-            'CDLBREAKAWAY': {
-                'description': 'Breakaway: A five-candle pattern indicating trend continuation after brief pause.',
-                'interpretation': 'Continuation pattern suggesting resumption of prevailing trend.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Five-candle pattern',
-                'direction': 'Both',
-                'components': 5
-            },
-            'CDLCLOSINGMARUBOZU': {
-                'description': 'Closing Marubozu: A candle with no shadow at the closing price end.',
-                'interpretation': 'Shows strong conviction in the direction of the close.',
-                'reliability': 'Medium',
-                'category': 'Momentum',
-                'type': 'Single-candle pattern',
-                'direction': 'Both',
-                'components': 1
-            },
-            'CDLCONCEALBABYSWALL': {
-                'description': 'Concealing Baby Swallow: A rare four-candle pattern with specific characteristics.',
-                'interpretation': 'Bearish reversal pattern, very rare but highly reliable.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Four-candle pattern',
-                'direction': 'Bearish',
-                'components': 4
-            },
-            'CDLCOUNTERATTACK': {
-                'description': 'Counterattack Lines: Two candles of opposite color with same closing price.',
-                'interpretation': 'Indicates market equilibrium, potential reversal point.',
-                'reliability': 'Low-Medium',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLDARKCLOUDCOVER': {
-                'description': 'Dark Cloud Cover: A bearish reversal pattern with a black candle opening above then closing below midpoint of previous white candle.',
-                'interpretation': 'Bearish reversal signal in an uptrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Bearish',
-                'components': 2
-            },
-            'CDLDOJI': {
-                'description': 'Doji: A candle where open and close are virtually equal, creating a cross or plus sign shape.',
-                'interpretation': 'Indicates indecision, potential trend reversal or consolidation.',
-                'reliability': 'Medium',
-                'category': 'Indecision',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLDOJISTAR': {
-                'description': 'Doji Star: A doji that gaps away from previous candle.',
-                'interpretation': 'Stronger reversal signal than regular doji, especially at trend extremes.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLDRAGONFLYDOJI': {
-                'description': 'Dragonfly Doji: A doji with long lower shadow and no upper shadow.',
-                'interpretation': 'Bullish reversal signal when appearing after downtrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bullish',
-                'components': 1
-            },
-            'CDLENGULFING': {
-                'description': 'Engulfing Pattern: A candle that completely engulfs the body of previous candle.',
-                'interpretation': 'Strong reversal signal. Bullish when white engulfs black, bearish when black engulfs white.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLEVENINGDOJISTAR': {
-                'description': 'Evening Doji Star: A three-candle bearish reversal pattern with doji in middle.',
-                'interpretation': 'Bearish reversal signal at the end of an uptrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLEVENINGSTAR': {
-                'description': 'Evening Star: A three-candle bearish reversal pattern similar to evening doji star but with small body in middle.',
-                'interpretation': 'Bearish reversal signal, less strong than evening doji star.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLGAPSIDESIDEWHITE': {
-                'description': 'Up/Down-Gap Side-by-Side White Lines: Two white candles gapping in same direction.',
-                'interpretation': 'Continuation pattern showing sustained momentum.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Two-candle pattern',
-                'direction': 'Bullish',
-                'components': 2
-            },
-            'CDLGRAVESTONEDOJI': {
-                'description': 'Gravestone Doji: A doji with long upper shadow and no lower shadow.',
-                'interpretation': 'Bearish reversal signal when appearing after uptrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bearish',
-                'components': 1
-            },
-            'CDLHAMMER': {
-                'description': 'Hammer: A candle with small body at top and long lower shadow (at least twice the body length).',
-                'interpretation': 'Bullish reversal signal when appearing in downtrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bullish',
-                'components': 1
-            },
-            'CDLHANGINGMAN': {
-                'description': 'Hanging Man: Similar to hammer but appears in uptrend.',
-                'interpretation': 'Bearish reversal signal when appearing after uptrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bearish',
-                'components': 1
-            },
-            'CDLHARAMI': {
-                'description': 'Harami: A small candle completely inside range of previous large candle.',
-                'interpretation': 'Potential reversal signal showing decrease in momentum.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLHARAMICROSS': {
-                'description': 'Harami Cross: A harami pattern where second candle is a doji.',
-                'interpretation': 'Stronger reversal signal than regular harami.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLHIGHWAVE': {
-                'description': 'High Wave: A candle with very long upper and lower shadows and small body.',
-                'interpretation': 'Indicates high volatility and indecision.',
-                'reliability': 'Low',
-                'category': 'Indecision',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLHIKKAKE': {
-                'description': 'Hikkake Pattern: A pattern that traps traders in false breakout then reverses.',
-                'interpretation': 'Continuation pattern that fools traders before resuming trend.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Complex pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDLHIKKAKEMOD': {
-                'description': 'Modified Hikkake: Variation of hikkake pattern.',
-                'interpretation': 'Similar to hikkake but with modified characteristics.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Complex pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDLHOMINGPIGEON': {
-                'description': 'Homing Pigeon: Similar to harami but both candles are black (bearish version).',
-                'interpretation': 'Bullish reversal signal in downtrend.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Bullish',
-                'components': 2
-            },
-            'CDLIDENTICAL3CROWS': {
-                'description': 'Identical Three Crows: Three black candles of similar size closing consecutively lower.',
-                'interpretation': 'Extremely bearish reversal pattern.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLINNECK': {
-                'description': 'In-Neck Pattern: A bearish line (black candle) that closes just into body of previous white candle.',
-                'interpretation': 'Bearish continuation pattern.',
-                'reliability': 'Low-Medium',
-                'category': 'Continuation',
-                'type': 'Two-candle pattern',
-                'direction': 'Bearish',
-                'components': 2
-            },
-            'CDLINVERTEDHAMMER': {
-                'description': 'Inverted Hammer: Similar to shooting star but appears in downtrend.',
-                'interpretation': 'Bullish reversal signal when appearing after downtrend.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bullish',
-                'components': 1
-            },
-            'CDLKICKING': {
-                'description': 'Kicking: Two marubozu candles gapping in opposite directions.',
-                'interpretation': 'Strong reversal signal based on gap direction.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLKICKINGBYLENGTH': {
-                'description': 'Kicking by Length: Kicking pattern where second candle is longer.',
-                'interpretation': 'Even stronger reversal signal than regular kicking.',
-                'reliability': 'Very High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLLADDERBOTTOM': {
-                'description': 'Ladder Bottom: A five-candle pattern with specific sequence of black and white candles.',
-                'interpretation': 'Bullish reversal pattern after extended downtrend.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Five-candle pattern',
-                'direction': 'Bullish',
-                'components': 5
-            },
-            'CDLLONGLEGGEDDOJI': {
-                'description': 'Long-Legged Doji: A doji with very long upper and lower shadows.',
-                'interpretation': 'High indecision, potential major reversal point.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLLONGLINE': {
-                'description': 'Long Line (Long Day): A candle with very long body relative to recent candles.',
-                'interpretation': 'Shows strong conviction in direction of candle.',
-                'reliability': 'Medium',
-                'category': 'Momentum',
-                'type': 'Single-candle pattern',
-                'direction': 'Both',
-                'components': 1
-            },
-            'CDLMARUBOZU': {
-                'description': 'Marubozu: A candle with no shadows (wicks) at either end.',
-                'interpretation': 'Extreme momentum in direction of candle.',
-                'reliability': 'High',
-                'category': 'Momentum',
-                'type': 'Single-candle pattern',
-                'direction': 'Both',
-                'components': 1
-            },
-            'CDLMATCHINGLOW': {
-                'description': 'Matching Low: Two black candles with similar lows.',
-                'interpretation': 'Bullish reversal signal suggesting support level.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Bullish',
-                'components': 2
-            },
-            'CDLMATHOLD': {
-                'description': 'Mat Hold: A bullish continuation pattern with gap up.',
-                'interpretation': 'Bullish continuation after brief consolidation.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Five-candle pattern',
-                'direction': 'Bullish',
-                'components': 5
-            },
-            'CDLMORNINGDOJISTAR': {
-                'description': 'Morning Doji Star: Bullish counterpart to evening doji star.',
-                'interpretation': 'Bullish reversal signal at end of downtrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bullish',
-                'components': 3
-            },
-            'CDLMORNINGSTAR': {
-                'description': 'Morning Star: Bullish counterpart to evening star.',
-                'interpretation': 'Bullish reversal signal, less strong than morning doji star.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bullish',
-                'components': 3
-            },
-            'CDLONNECK': {
-                'description': 'On-Neck Pattern: Similar to in-neck but closes at low of previous candle.',
-                'interpretation': 'Bearish continuation pattern.',
-                'reliability': 'Low',
-                'category': 'Continuation',
-                'type': 'Two-candle pattern',
-                'direction': 'Bearish',
-                'components': 2
-            },
-            'CDLPIERCING': {
-                'description': 'Piercing Line: Bullish counterpart to dark cloud cover.',
-                'interpretation': 'Bullish reversal signal in downtrend.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Bullish',
-                'components': 2
-            },
-            'CDLRICKSHAWMAN': {
-                'description': 'Rickshaw Man: Similar to long-legged doji with very long shadows.',
-                'interpretation': 'Extreme indecision, often at major turning points.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLRISEFALL3METHODS': {
-                'description': 'Rising/Falling Three Methods: A continuation pattern with one long candle, three small counter-trend candles, then another long candle in original direction.',
-                'interpretation': 'Continuation pattern showing pause before trend resumption.',
-                'reliability': 'Medium-High',
-                'category': 'Continuation',
-                'type': 'Five-candle pattern',
-                'direction': 'Both',
-                'components': 5
-            },
-            'CDLSEPARATINGLINES': {
-                'description': 'Separating Lines: Two candles of opposite color with same opening price.',
-                'interpretation': 'Continuation pattern showing trend resumption.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Two-candle pattern',
-                'direction': 'Both',
-                'components': 2
-            },
-            'CDLSHOOTINGSTAR': {
-                'description': 'Shooting Star: A candle with small body at bottom, long upper shadow, and little to no lower shadow.',
-                'interpretation': 'Bearish reversal signal when appearing in uptrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bearish',
-                'components': 1
-            },
-            'CDLSHORTLINE': {
-                'description': 'Short Line (Short Day): A candle with very small body relative to recent candles.',
-                'interpretation': 'Indicates lack of conviction, potential trend change.',
-                'reliability': 'Low',
-                'category': 'Indecision',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLSPINNINGTOP': {
-                'description': 'Spinning Top: A candle with small body and moderate shadows.',
-                'interpretation': 'Indecision, potential trend pause or reversal.',
-                'reliability': 'Low',
-                'category': 'Indecision',
-                'type': 'Single-candle pattern',
-                'direction': 'Neutral',
-                'components': 1
-            },
-            'CDLSTALLEDPATTERN': {
-                'description': 'Stalled Pattern: Similar to advance block but with specific characteristics.',
-                'interpretation': 'Bearish reversal showing loss of upward momentum.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLSTICKSANDWICH': {
-                'description': 'Stick Sandwich: Two black candles surrounding a white candle, all with same closing price.',
-                'interpretation': 'Bullish reversal pattern.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bullish',
-                'components': 3
-            },
-            'CDLTAKURI': {
-                'description': 'Takuri (Dragonfly Doji with very long lower shadow).',
-                'interpretation': 'Strong bullish reversal signal.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Single-candle pattern',
-                'direction': 'Bullish',
-                'components': 1
-            },
-            'CDLTASUKIGAP': {
-                'description': 'Tasuki Gap: A continuation pattern with gap followed by counter-trend candle that doesnt fill gap.',
-                'interpretation': 'Continuation pattern showing trend strength.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Three-candle pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDLTHRUSTING': {
-                'description': 'Thrusting Pattern: Similar to piercing line but closes below midpoint of previous candle.',
-                'interpretation': 'Weaker bullish signal than piercing line.',
-                'reliability': 'Low-Medium',
-                'category': 'Reversal',
-                'type': 'Two-candle pattern',
-                'direction': 'Bullish',
-                'components': 2
-            },
-            'CDLTRISTAR': {
-                'description': 'Tristar: Three doji candles in a row.',
-                'interpretation': 'Extreme indecision, major reversal likely.',
-                'reliability': 'High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Both',
-                'components': 3
-            },
-            'CDLUNIQUE3RIVER': {
-                'description': 'Unique Three River: A three-candle pattern with specific sequence.',
-                'interpretation': 'Bullish reversal signal after downtrend.',
-                'reliability': 'Medium',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bullish',
-                'components': 3
-            },
-            'CDLUPSIDEGAP2CROWS': {
-                'description': 'Upside Gap Two Crows: A bearish reversal pattern with gap up followed by two black candles.',
-                'interpretation': 'Bearish reversal signal in uptrend.',
-                'reliability': 'Medium-High',
-                'category': 'Reversal',
-                'type': 'Three-candle pattern',
-                'direction': 'Bearish',
-                'components': 3
-            },
-            'CDLXSIDEGAP3METHODS': {
-                'description': 'Upside/Downside Gap Three Methods: A continuation pattern with gap followed by consolidation.',
-                'interpretation': 'Continuation pattern showing trend resumption after pause.',
-                'reliability': 'Medium',
-                'category': 'Continuation',
-                'type': 'Complex pattern',
-                'direction': 'Both',
-                'components': 5
-            }
+    def store_ui_references(self):
+        """Store references to UI elements that need language updates"""
+        self.ui_elements = {
+            'search_label': self.search_label,
+            'search_box': self.search_box,
+            'app_help_btn': self.app_help_btn,
+            'pattern_title': self.pattern_title,
+            'interpretation_label': self.interpretation_label,
+            'reliability_group': self.reliability_group,
+            'category_group': self.category_group,
+            'type_group': self.type_group,
+            'direction_group': self.direction_group
         }
 
-        # Add all patterns
-        for pattern, info in pattern_info.items():
-            patterns[pattern] = info
+    def change_language(self, lang: str):
+        """Change application language"""
+        if self.language_manager.set_language(lang):
+            # Update window title
+            self.setWindowTitle(self.language_manager.get_text("help_title"))
 
-        # Add any missing patterns with generic description
-        for pattern in CANDLE_PATTERNS:
-            if pattern not in patterns:
-                patterns[pattern] = {
-                    'description': f'{pattern}: Japanese candlestick pattern for technical analysis.',
-                    'interpretation': 'Trading signal based on price action analysis.',
-                    'reliability': 'Medium',
-                    'category': 'Technical',
-                    'type': 'Candlestick pattern',
-                    'direction': 'Both',
-                    'components': 1
-                }
+            # Update UI elements
+            self.ui_elements['search_label'].setText(self.language_manager.get_text("search_label"))
+            self.ui_elements['search_box'].setPlaceholderText(self.language_manager.get_text("search_placeholder"))
+            self.ui_elements['app_help_btn'].setText(self.language_manager.get_text("application_help"))
+            self.ui_elements['pattern_title'].setText(self.language_manager.get_text("select_pattern"))
+            self.ui_elements['interpretation_label'].setText(self.language_manager.get_text("interpretation"))
 
-        return patterns
+            # Update group boxes
+            self.ui_elements['reliability_group'].setTitle(self.language_manager.get_text("reliability"))
+            self.ui_elements['category_group'].setTitle(self.language_manager.get_text("category"))
+            self.ui_elements['type_group'].setTitle(self.language_manager.get_text("type"))
+            self.ui_elements['direction_group'].setTitle(self.language_manager.get_text("direction"))
+
+            # Update pattern details if one is selected
+            selected_items = self.pattern_list.selectedItems()
+            if selected_items:
+                self.show_pattern_details()
+
+            # Update button states
+            self.english_btn.setChecked(lang == "english")
+            self.russian_btn.setChecked(lang == "russian")
+            self.spanish_btn.setChecked(lang == "spanish")
+
+            logger.info(f"Language changed to: {lang}")
 
     def filter_patterns(self):
         """Filter pattern list based on search text"""
@@ -1305,14 +421,14 @@ class HelpWindow(QMainWindow):
 
         pattern_name = selected_items[0].text()
 
-        # Make sure pattern_data is loaded
-        if not hasattr(self, 'pattern_data') or not self.pattern_data:
-            self.load_pattern_descriptions()
-
-        pattern_info = self.pattern_data.get(pattern_name, {})
+        # Get pattern info from language manager
+        pattern_info = self.language_manager.get_pattern_info(pattern_name)
 
         # Update title
         self.pattern_title.setText(pattern_name)
+
+        # Update image display
+        self.pattern_image.set_pattern(pattern_name)
 
         # Update description
         description = pattern_info.get('description', 'No description available.')
@@ -1339,143 +455,1090 @@ class HelpWindow(QMainWindow):
         # Update direction with color coding
         direction = pattern_info.get('direction', 'N/A')
         self.direction_label.setText(direction)
-        if direction == 'Bullish':
+        if direction.lower() in ['bullish', 'бычий', 'alcista', 'long']:
             self.direction_label.setStyleSheet("color: green; font-weight: bold;")
-        elif direction == 'Bearish':
+        elif direction.lower() in ['bearish', 'медвежий', 'bajista', 'short']:
             self.direction_label.setStyleSheet("color: red; font-weight: bold;")
-        elif direction == 'Both':
+        elif direction.lower() in ['both', 'оба', 'ambos', 'neutral']:
             self.direction_label.setStyleSheet("color: blue; font-weight: bold;")
         else:
             self.direction_label.setStyleSheet("color: gray;")
 
-        # Update diagram with pattern data
-        self.pattern_diagram.set_pattern(pattern_name, pattern_info)
-
     def show_application_help(self):
-        """Show application help"""
-        help_text = """
-        <h1>MOEX & Crypto Backtest System - Help</h1>
+        """Show detailed application help in current language"""
+        help_title = self.language_manager.get_text("app_help_title")
 
-        <h2>1. Application Overview</h2>
-        <p>This application allows you to backtest trading strategies based on Japanese candlestick patterns on MOEX and cryptocurrency markets.</p>
-
-        <h2>2. Getting Started</h2>
-        <h3>Step 1: Create a Strategy</h3>
-        <ul>
-            <li>Click "New" in Strategy Management</li>
-            <li>Give your strategy a name</li>
-            <li>Select patterns to include</li>
-            <li>Choose entry and exit rules</li>
-            <li>Set risk parameters</li>
-            <li>Click "Save"</li>
-        </ul>
-
-        <h3>Step 2: Fetch Data</h3>
-        <ul>
-            <li>Select market (MOEX or Cryptocurrency)</li>
-            <li>Enter ticker/symbol (e.g., SBER for MOEX, BTCUSDT for crypto)</li>
-            <li>Choose timeframe (1m to Monthly)</li>
-            <li>Set date range</li>
-            <li>Adjust pattern detection threshold</li>
-            <li>Click "Fetch Data"</li>
-        </ul>
-
-        <h3>Step 3: Run Backtest</h3>
-        <ul>
-            <li>Select your strategy</li>
-            <li>Set capital and commission parameters</li>
-            <li>Click "Run Backtest"</li>
-        </ul>
-
-        <h3>Step 4: Analyze Results</h3>
-        <ul>
-            <li>View performance metrics</li>
-            <li>Click "Show Chart" for visual analysis</li>
-            <li>Save results to Excel or Database</li>
-            <li>Use "View Database" to review historical tests</li>
-        </ul>
-
-        <h2>3. Features</h2>
-        <h3>Strategy Management</h3>
-        <p>Create, edit, delete, and save trading strategies with custom parameters.</p>
-
-        <h3>Multi-Market Support</h3>
-        <p>Test on MOEX (Russian stock market) and cryptocurrency markets (via Bybit).</p>
-
-        <h3>Pattern Detection</h3>
-        <p>61 candlestick patterns from TA-Lib library with adjustable detection threshold.</p>
-
-        <h3>Risk Management</h3>
-        <ul>
-            <li>Position sizing as percentage of capital</li>
-            <li>Stop loss and take profit levels</li>
-            <li>Commission and slippage calculation</li>
-            <li>Multiple exit rules (time-based, opposite pattern, etc.)</li>
-        </ul>
-
-        <h3>Visualization</h3>
-        <ul>
-            <li>Interactive candlestick charts</li>
-            <li>Trade entry/exit markers</li>
-            <li>Technical indicators (MACD, RSI, Bollinger Bands)</li>
-            <li>Zoom and pan functionality</li>
-        </ul>
-
-        <h3>Data Management</h3>
-        <ul>
-            <li>Save results to Excel with charts</li>
-            <li>Store strategies and results in SQLite database</li>
-            <li>Export data to CSV</li>
-        </ul>
-
-        <h2>4. Pattern Explanations</h2>
-        <p>Use the left panel to browse all 61 candlestick patterns. Each pattern includes:</p>
-        <ul>
-            <li>Detailed description</li>
-            <li>Trading interpretation</li>
-            <li>Reliability rating</li>
-            <li>Pattern category and type</li>
-            <li>Visual representation</li>
-        </ul>
-
-        <h2>5. Tips for Effective Backtesting</h2>
-        <ol>
-            <li><b>Use sufficient data:</b> Test on at least 1-2 years of data for reliable results</li>
-            <li><b>Consider market conditions:</b> Strategies may perform differently in bull/bear markets</li>
-            <li><b>Include commissions:</b> Always account for trading costs</li>
-            <li><b>Test multiple timeframes:</b> Strategies may work better on certain timeframes</li>
-            <li><b>Combine patterns:</b> Using multiple patterns together can improve signal quality</li>
-            <li><b>Set realistic expectations:</b> No strategy works 100% of the time</li>
-        </ol>
-
-        <h2>6. Troubleshooting</h2>
-        <p><b>No data fetched:</b> Check your internet connection and ensure the ticker/symbol is correct.</p>
-        <p><b>Chart not showing:</b> Make sure you have matplotlib and mplfinance installed.</p>
-        <p><b>Database errors:</b> Check file permissions for the database folder.</p>
-        <p><b>Pattern not detected:</b> Adjust the pattern threshold slider.</p>
-
-        <h2>7. Support</h2>
-        <p>For issues or feature requests, please check the application logs in the logs/ directory.</p>
-        <p>Log files are rotated weekly and contain detailed information about errors and user actions.</p>
-        """
+        # Get help content based on language
+        help_content = self.get_detailed_help_content()
 
         # Create dialog with help text
         dialog = QDialog(self)
-        dialog.setWindowTitle("Application Help")
-        dialog.setGeometry(200, 200, 1000, 800)
+        dialog.setWindowTitle(help_title)
+        dialog.setGeometry(200, 200, 1200, 900)
 
         layout = QVBoxLayout(dialog)
 
         # Use QTextEdit for rich text display
         text_edit = QTextEdit()
         text_edit.setReadOnly(True)
-        text_edit.setHtml(help_text)
+        text_edit.setHtml(help_content)
 
         layout.addWidget(text_edit)
 
-        # Close button
-        close_btn = QPushButton("Close")
+        # Close button (translated)
+        close_text = self.get_close_text()
+        close_btn = QPushButton(close_text)
         close_btn.clicked.connect(dialog.accept)
         layout.addWidget(close_btn)
 
         dialog.exec_()
+
+    def get_detailed_help_content(self):
+        """Get detailed help content based on current language"""
+        lang = self.language_manager.current_language
+
+        if lang == "russian":
+            return self.get_russian_help_content()
+        elif lang == "spanish":
+            return self.get_spanish_help_content()
+        else:
+            return self.get_english_help_content()
+
+    def get_english_help_content(self):
+        """English help content"""
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                h2 { color: #3498db; margin-top: 25px; }
+                h3 { color: #2980b9; margin-top: 20px; }
+                .section { margin-bottom: 30px; }
+                .metric { background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 15px 0; }
+                .tip { background: #e8f4fd; padding: 15px; border-left: 4px solid #2980b9; margin: 15px 0; }
+                .warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0; }
+                .disclaimer { background: #f8d7da; padding: 20px; border: 2px solid #dc3545; margin: 25px 0; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th { background: #3498db; color: white; padding: 12px; text-align: left; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background: #f8f9fa; }
+                .highlight { background-color: #ffffcc; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 MOEX & Crypto Backtest System - Complete User Guide</h1>
+
+            <div class="section">
+                <h2>1. 🎯 Application Overview</h2>
+                <p>This application allows you to backtest trading strategies based on <strong>61 Japanese candlestick patterns</strong> on both <strong>MOEX (Russian stock market)</strong> and <strong>Cryptocurrency markets</strong>.</p>
+
+                <h3>Key Capabilities:</h3>
+                <ul>
+                    <li>✅ Multi-market support (MOEX & Cryptocurrency)</li>
+                    <li>✅ 61 candlestick patterns from TA-Lib</li>
+                    <li>✅ Custom strategy creation and management</li>
+                    <li>✅ Realistic backtesting with commission and slippage</li>
+                    <li>✅ Comprehensive performance metrics</li>
+                    <li>✅ Interactive visualization with Plotly</li>
+                    <li>✅ Database storage for strategies and results</li>
+                    <li>✅ Multi-language support (English, Russian, Spanish)</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>2. 🚀 Getting Started</h2>
+
+                <h3>Step 1: Create a Strategy</h3>
+                <ol>
+                    <li>Click <span class="highlight">"New"</span> in Strategy Management section</li>
+                    <li>Give your strategy a descriptive name</li>
+                    <li>Select patterns to include (Ctrl+Click for multiple selection)</li>
+                    <li>Choose entry rule:
+                        <ul>
+                            <li><strong>OPEN_NEXT_CANDLE</strong> - Enter at next candle open price</li>
+                            <li><strong>MIDDLE_OF_PATTERN</strong> - Enter at pattern midpoint</li>
+                            <li><strong>CLOSE_PATTERN</strong> - Enter at pattern closing price</li>
+                        </ul>
+                    </li>
+                    <li>Select exit rule:
+                        <ul>
+                            <li><strong>STOP_LOSS_TAKE_PROFIT</strong> - Fixed stop loss and take profit</li>
+                            <li><strong>TAKE_PROFIT_ONLY</strong> - Only take profit, no stop loss</li>
+                            <li><strong>OPPOSITE_PATTERN</strong> - Exit when opposite pattern appears</li>
+                            <li><strong>TIMEBASED_EXIT</strong> - Exit after specified number of bars</li>
+                            <li><strong>TRAILING_STOP</strong> - Dynamic trailing stop loss</li>
+                        </ul>
+                    </li>
+                    <li>Set risk parameters (see section 5 for recommendations)</li>
+                    <li>Click <span class="highlight">"Save"</span></li>
+                </ol>
+
+                <h3>Step 2: Fetch Market Data</h3>
+                <ol>
+                    <li>Select market type: <strong>MOEX</strong> or <strong>Cryptocurrency</strong></li>
+                    <li>Enter ticker/symbol:
+                        <ul>
+                            <li>MOEX: SBER, GAZP, LKOH, etc.</li>
+                            <li>Crypto: BTCUSDT, ETHUSDT, XRPUSDT, etc.</li>
+                        </ul>
+                    </li>
+                    <li>Choose timeframe: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M</li>
+                    <li>Set date range (minimum 3 months recommended)</li>
+                    <li>Adjust pattern threshold (default 0.5)</li>
+                    <li>Click <span class="highlight">"Fetch Data"</span></li>
+                </ol>
+
+                <h3>Step 3: Run Backtest</h3>
+                <ol>
+                    <li>Select your strategy from dropdown</li>
+                    <li>Set capital parameters:
+                        <ul>
+                            <li>Initial Capital (default: 1,000,000 RUB)</li>
+                            <li>Commission % (default: 0.1%)</li>
+                            <li>Slippage % (default: 0.1%)</li>
+                        </ul>
+                    </li>
+                    <li>Click <span class="highlight">"Run Backtest"</span></li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>3. 📊 Performance Metrics Explained</h2>
+
+                <div class="metric">
+                    <h3>📈 Return Metrics</h3>
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Description</th>
+                            <th>Interpretation</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Return %</strong></td>
+                            <td>Overall return on initial capital</td>
+                            <td>Above 0% = profitable, Negative = loss</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sharpe Ratio</strong></td>
+                            <td>Risk-adjusted return (annualized)</td>
+                            <td>>1 = Good, >2 = Excellent, <0 = Poor</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Profit Factor</strong></td>
+                            <td>Gross Profit ÷ Gross Loss</td>
+                            <td>>1.5 = Good, >2 = Excellent, <1 = Losing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average ROI per Trade</strong></td>
+                            <td>Average return per trade</td>
+                            <td>Consistency indicator</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>⚖️ Risk Metrics</h3>
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Description</th>
+                            <th>Interpretation</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Maximum Drawdown %</strong></td>
+                            <td>Largest peak-to-trough decline</td>
+                            <td><20% = Good, <10% = Excellent, >30% = Risky</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Win Rate %</strong></td>
+                            <td>Percentage of winning trades</td>
+                            <td>>50% = Good, >60% = Excellent</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Win/Loss Ratio</strong></td>
+                            <td>Avg win size ÷ Avg loss size</td>
+                            <td>>1.5 = Good, >2 = Excellent</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Standard Deviation of P&L</strong></td>
+                            <td>Volatility of returns</td>
+                            <td>Lower = More consistent results</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>📋 Trade Statistics</h3>
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Description</th>
+                            <th>Ideal Range</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Trades</strong></td>
+                            <td>Number of trades executed</td>
+                            <td>Minimum 30 for statistical significance</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Consecutive Wins/Losses</strong></td>
+                            <td>Longest winning/losing streak</td>
+                            <td>Avoid >5 consecutive losses</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Trade Duration</strong></td>
+                            <td>Average holding period</td>
+                            <td>Depends on strategy timeframe</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Long/Short Distribution</strong></td>
+                            <td>Ratio of long vs short trades</td>
+                            <td>Balanced or market-dependent</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4. 🎯 Pattern Detection Settings</h2>
+
+                <h3>Pattern Threshold (0.0 - 1.0)</h3>
+                <ul>
+                    <li><strong>0.0</strong>: Maximum sensitivity - detects more patterns (more false signals)</li>
+                    <li><strong>0.5</strong>: Default - standard TA-Lib detection level</li>
+                    <li><strong>1.0</strong>: Minimum sensitivity - detects only strongest patterns (fewer signals)</li>
+                </ul>
+
+                <div class="tip">
+                    <h4>💡 Recommendation:</h4>
+                    <p>Start with default 0.5, then adjust based on results:
+                    <br>• Increase threshold if too many false signals
+                    <br>• Decrease threshold if missing valid signals</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>5. 🛡️ Risk Management Guidelines</h2>
+
+                <div class="tip">
+                    <h3>Position Sizing Recommendations</h3>
+                    <ul>
+                        <li><strong>Conservative</strong>: 1-5% of capital per trade</li>
+                        <li><strong>Moderate</strong>: 5-10% of capital per trade</li>
+                        <li><strong>Aggressive</strong>: 10-20% of capital per trade (not recommended)</li>
+                        <li><strong>Maximum</strong>: Never exceed 25% in single position</li>
+                    </ul>
+                    <p><strong>Formula:</strong> Position Size = (Capital × Risk %) ÷ Entry Price</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Stop Loss Settings</h3>
+                    <ul>
+                        <li><strong>Intraday (1m-1h)</strong>: 0.5-2.0%</li>
+                        <li><strong>Swing Trading (4h-1d)</strong>: 1.5-3.0%</li>
+                        <li><strong>Position Trading (1w-1M)</strong>: 2.0-5.0%</li>
+                        <li><strong>Cryptocurrency</strong>: Add 0.5-1.0% to above values (higher volatility)</li>
+                    </ul>
+                    <p><strong>Calculation:</strong> Stop Price = Entry Price × (1 - Stop Loss %)</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Take Profit Settings</h3>
+                    <table>
+                        <tr>
+                            <th>Risk-Reward Ratio</th>
+                            <th>Take Profit %</th>
+                            <th>Minimum Win Rate Required</th>
+                        </tr>
+                        <tr>
+                            <td>1:1</td>
+                            <td>Same as Stop Loss</td>
+                            <td>>50%</td>
+                        </tr>
+                        <tr>
+                            <td>1:1.5</td>
+                            <td>1.5× Stop Loss</td>
+                            <td>>40%</td>
+                        </tr>
+                        <tr>
+                            <td>1:2</td>
+                            <td>2× Stop Loss</td>
+                            <td>>33%</td>
+                        </tr>
+                        <tr>
+                            <td>1:3</td>
+                            <td>3× Stop Loss</td>
+                            <td>>25%</td>
+                        </tr>
+                    </table>
+                    <p><strong>Example:</strong> With 2% stop loss and 1:2 risk-reward, take profit = 4%</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Time-based Exit (Max Bars to Hold)</h3>
+                    <ul>
+                        <li><strong>Scalping (1m-5m)</strong>: 5-15 bars</li>
+                        <li><strong>Day Trading (15m-1h)</strong>: 10-30 bars</li>
+                        <li><strong>Swing Trading (4h-1d)</strong>: 5-20 bars</li>
+                        <li><strong>Position Trading</strong>: 10-50 bars</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>6. 📈 Data Analysis Best Practices</h2>
+
+                <div class="tip">
+                    <h3>🕐 Timeframe Selection</h3>
+                    <ul>
+                        <li><strong>Pattern reliability varies by timeframe</strong></li>
+                        <li><strong>Higher timeframes</strong> (4h, 1d, 1w): More reliable signals, fewer trades</li>
+                        <li><strong>Lower timeframes</strong> (1m, 5m, 15m): More signals, higher noise</li>
+                        <li><strong>Recommended</strong>: Test strategy on multiple timeframes</li>
+                    </ul>
+                </div>
+
+                <div class="tip">
+                    <h3>📅 Data Requirements</h3>
+                    <ul>
+                        <li><strong>Minimum data</strong>: 3 months for intraday, 1 year for daily</li>
+                        <li><strong>Ideal data</strong>: 1-2 years for statistical significance</li>
+                        <li><strong>Market conditions</strong>: Include both bull and bear markets</li>
+                        <li><strong>Sample size</strong>: Minimum 30 trades for reliable statistics</li>
+                    </ul>
+                </div>
+
+                <div class="tip">
+                    <h3>🔍 Pattern Combinations</h3>
+                    <ul>
+                        <li>Start with 3-5 high-reliability patterns</li>
+                        <li>Combine reversal patterns (Hammer, Engulfing, Doji)</li>
+                        <li>Filter with confirmation (e.g., volume, trend alignment)</li>
+                        <li>Avoid using all 61 patterns - focus on proven ones</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>7. 💾 Results Interpretation</h2>
+
+                <div class="tip">
+                    <h3>✅ Good Strategy Characteristics</h3>
+                    <ul>
+                        <li>Profit Factor > 1.5</li>
+                        <li>Sharpe Ratio > 1.0</li>
+                        <li>Maximum Drawdown < 20%</li>
+                        <li>Win Rate > 50%</li>
+                        <li>Average Win/Loss Ratio > 1.5</li>
+                        <li>Consistent performance across timeframes</li>
+                        <li>No excessive consecutive losses (< 5)</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <h3>⚠️ Red Flags (Strategy Needs Improvement)</h3>
+                    <ul>
+                        <li>Profit Factor < 1.0 (losing strategy)</li>
+                        <li>Maximum Drawdown > 30%</li>
+                        <li>Sharpe Ratio < 0</li>
+                        <li>Win Rate < 40% with poor risk-reward</li>
+                        <li>More than 5 consecutive losses</li>
+                        <li>Extreme dependence on few trades</li>
+                        <li>Poor performance in different market conditions</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>8. 🔧 Advanced Features</h2>
+
+                <h3>Database Management</h3>
+                <ul>
+                    <li><strong>Save Strategies</strong>: Store unlimited strategies</li>
+                    <li><strong>Save Results</strong>: Track historical performance</li>
+                    <li><strong>Export to Excel</strong>: Complete reports with charts</li>
+                    <li><strong>Compare Results</strong>: Analyze strategy evolution</li>
+                </ul>
+
+                <h3>Visualization Tools</h3>
+                <ul>
+                    <li><strong>Interactive Charts</strong>: Zoom, pan, hover details</li>
+                    <li><strong>Technical Indicators</strong>: Toggle MACD, RSI, Volume</li>
+                    <li><strong>Trade Markers</strong>: Visual entry/exit points</li>
+                    <li><strong>Multi-timeframe Analysis</strong></li>
+                </ul>
+
+                <h3>Debug Mode</h3>
+                <ul>
+                    <li>Enable detailed logging</li>
+                    <li>Track capital allocation</li>
+                    <li>Monitor trade decisions</li>
+                    <li>Identify calculation issues</li>
+                </ul>
+            </div>
+
+            <div class="disclaimer">
+                <h2>⚠️ IMPORTANT DISCLAIMER</h2>
+                <p><strong>TRADING INVOLVES SUBSTANTIAL RISK OF LOSS</strong></p>
+
+                <h3>Risk Warnings:</h3>
+                <ul>
+                    <li>This software is for <strong>EDUCATIONAL AND RESEARCH PURPOSES ONLY</strong></li>
+                    <li><strong>Past performance does not guarantee future results</strong></li>
+                    <li>Backtest results are theoretical and may not reflect actual trading</li>
+                    <li>All trading decisions are your sole responsibility</li>
+                    <li>Never trade with money you cannot afford to lose</li>
+                    <li>Consider all risks including but not limited to:
+                        <ul>
+                            <li>Market risk</li>
+                            <li>Liquidity risk</li>
+                            <li>Systematic risk</li>
+                            <li>Leverage risk</li>
+                            <li>Operational risk</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Limitations of Backtesting:</h3>
+                <ul>
+                    <li><strong>Look-ahead bias</strong>: Historical data analysis may create unrealistic expectations</li>
+                    <li><strong>Survivorship bias</strong>: Only successful assets are included in historical data</li>
+                    <li><strong>Overfitting</strong>: Strategies may work only on historical data</li>
+                    <li><strong>Market changes</strong>: Past patterns may not repeat</li>
+                    <li><strong>Execution issues</strong>: Slippage, commissions, and liquidity not fully captured</li>
+                </ul>
+
+                <h3>Professional Advice:</h3>
+                <p>Consult with a qualified financial advisor before making any investment decisions.
+                The developers of this software are not responsible for any financial losses incurred through its use.</p>
+
+                <p style="text-align: center; font-weight: bold; color: #dc3545; margin-top: 15px;">
+                    USE AT YOUR OWN RISK • NO GUARANTEES • EDUCATIONAL PURPOSES ONLY
+                </p>
+            </div>
+
+            <div class="section">
+                <h2>9. 📞 Support & Troubleshooting</h2>
+
+                <h3>Common Issues:</h3>
+                <ul>
+                    <li><strong>No data fetched</strong>: Check internet connection, verify ticker symbol</li>
+                    <li><strong>Chart not displaying</strong>: Ensure Plotly is installed, check browser settings</li>
+                    <li><strong>Pattern not detected</strong>: Adjust threshold, ensure sufficient data</li>
+                    <li><strong>Database errors</strong>: Check file permissions, disk space</li>
+                </ul>
+
+                <h3>Log Files:</h3>
+                <p>Check <code>logs/</code> directory for detailed information:
+                <br>• <code>app.log</code> - General application logs
+                <br>• <code>error.log</code> - Error details
+                <br>• <code>user.log</code> - User actions</p>
+            </div>
+
+            <div class="section">
+                <h2>10. 🔮 Future Development</h2>
+                <ul>
+                    <li>Machine learning integration for pattern prediction</li>
+                    <li>Additional markets (Forex, US stocks, Futures)</li>
+                    <li>Advanced analytics (Monte Carlo simulation, walk-forward analysis)</li>
+                    <li>Real-time pattern detection and alerts</li>
+                    <li>Enhanced visualization (3D patterns, correlation matrices)</li>
+                    <li>More languages and pattern descriptions</li>
+                </ul>
+
+                <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;">
+                    🤖 Developed by DeepSeek AI Assistant • 📅 Last Updated: February 2026<br>
+                    ⭐ If you find this software useful, please give it a star!
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+    def get_russian_help_content(self):
+        """Russian help content"""
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                h2 { color: #3498db; margin-top: 25px; }
+                h3 { color: #2980b9; margin-top: 20px; }
+                .section { margin-bottom: 30px; }
+                .metric { background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 15px 0; }
+                .tip { background: #e8f4fd; padding: 15px; border-left: 4px solid #2980b9; margin: 15px 0; }
+                .warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0; }
+                .disclaimer { background: #f8d7da; padding: 20px; border: 2px solid #dc3545; margin: 25px 0; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th { background: #3498db; color: white; padding: 12px; text-align: left; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background: #f8f9fa; }
+                .highlight { background-color: #ffffcc; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 Система Бэктестинга MOEX и Криптовалют - Полное Руководство</h1>
+
+            <div class="section">
+                <h2>1. 🎯 Обзор Приложения</h2>
+                <p>Это приложение позволяет тестировать торговые стратегии на основе <strong>61 японских свечных паттернов</strong> на рынках <strong>MOEX (Российский фондовый рынок)</strong> и <strong>Криптовалют</strong>.</p>
+
+                <h3>Ключевые Возможности:</h3>
+                <ul>
+                    <li>✅ Поддержка нескольких рынков (MOEX & Криптовалюты)</li>
+                    <li>✅ 61 свечной паттерн из TA-Lib</li>
+                    <li>✅ Создание и управление пользовательскими стратегиями</li>
+                    <li>✅ Реалистичный бэктестинг с комиссиями и проскальзыванием</li>
+                    <li>✅ Комплексные метрики производительности</li>
+                    <li>✅ Интерактивная визуализация с Plotly</li>
+                    <li>✅ Хранение стратегий и результатов в базе данных</li>
+                    <li>✅ Многоязычная поддержка (Английский, Русский, Испанский)</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>2. 🚀 Начало Работы</h2>
+
+                <h3>Шаг 1: Создание Стратегии</h3>
+                <ol>
+                    <li>Нажмите <span class="highlight">"Новая"</span> в разделе Управление стратегиями</li>
+                    <li>Дайте стратегии описательное название</li>
+                    <li>Выберите паттерны для включения (Ctrl+Click для множественного выбора)</li>
+                    <li>Выберите правило входа:
+                        <ul>
+                            <li><strong>OPEN_NEXT_CANDLE</strong> - Вход по цене открытия следующей свечи</li>
+                            <li><strong>MIDDLE_OF_PATTERN</strong> - Вход по средней цене паттерна</li>
+                            <li><strong>CLOSE_PATTERN</strong> - Вход по цене закрытия паттерна</li>
+                        </ul>
+                    </li>
+                    <li>Выберите правило выхода:
+                        <ul>
+                            <li><strong>STOP_LOSS_TAKE_PROFIT</strong> - Фиксированные стоп-лосс и тейк-профит</li>
+                            <li><strong>TAKE_PROFIT_ONLY</strong> - Только тейк-профит, без стоп-лосса</li>
+                            <li><strong>OPPOSITE_PATTERN</strong> - Выход при появлении противоположного паттерна</li>
+                            <li><strong>TIMEBASED_EXIT</strong> - Выход после указанного количества свечей</li>
+                            <li><strong>TRAILING_STOP</strong> - Динамический трейлинг-стоп</li>
+                        </ul>
+                    </li>
+                    <li>Установите параметры риска (см. раздел 5 для рекомендаций)</li>
+                    <li>Нажмите <span class="highlight">"Сохранить"</span></li>
+                </ol>
+
+                <h3>Шаг 2: Загрузка Рыночных Данных</h3>
+                <ol>
+                    <li>Выберите тип рынка: <strong>MOEX</strong> или <strong>Криптовалюта</strong></li>
+                    <li>Введите тикер/символ:
+                        <ul>
+                            <li>MOEX: SBER, GAZP, LKOH и т.д.</li>
+                            <li>Криптовалюта: BTCUSDT, ETHUSDT, XRPUSDT и т.д.</li>
+                        </ul>
+                    </li>
+                    <li>Выберите таймфрейм: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M</li>
+                    <li>Установите диапазон дат (рекомендуется минимум 3 месяца)</li>
+                    <li>Настройте порог обнаружения паттернов (по умолчанию 0.5)</li>
+                    <li>Нажмите <span class="highlight">"Загрузить Данные"</span></li>
+                </ol>
+
+                <h3>Шаг 3: Запуск Бэктестинга</h3>
+                <ol>
+                    <li>Выберите вашу стратегию из выпадающего списка</li>
+                    <li>Установите параметры капитала:
+                        <ul>
+                            <li>Начальный капитал (по умолчанию: 1,000,000 RUB)</li>
+                            <li>Комиссия % (по умолчанию: 0.1%)</li>
+                            <li>Проскальзывание % (по умолчанию: 0.1%)</li>
+                        </ul>
+                    </li>
+                    <li>Нажмите <span class="highlight">"Запустить Бэктестинг"</span></li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>3. 📊 Объяснение Метрик Производительности</h2>
+
+                <div class="metric">
+                    <h3>📈 Метрики Доходности</h3>
+                    <table>
+                        <tr>
+                            <th>Метрика</th>
+                            <th>Описание</th>
+                            <th>Интерпретация</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Общая Доходность %</strong></td>
+                            <td>Общая доходность на начальный капитал</td>
+                            <td>Выше 0% = прибыльно, Отрицательная = убыток</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Коэффициент Шарпа</strong></td>
+                            <td>Доходность с поправкой на риск (годовая)</td>
+                            <td>>1 = Хорошо, >2 = Отлично, <0 = Плохо</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Фактор Прибыли</strong></td>
+                            <td>Валовая прибыль ÷ Валовые убытки</td>
+                            <td>>1.5 = Хорошо, >2 = Отлично, <1 = Убыточно</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Средняя ROI на Сделку</strong></td>
+                            <td>Средняя доходность на сделку</td>
+                            <td>Индикатор стабильности</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>⚖️ Метрики Риска</h3>
+                    <table>
+                        <tr>
+                            <th>Метрика</th>
+                            <th>Описание</th>
+                            <th>Интерпретация</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Максимальная Просадка %</strong></td>
+                            <td>Наибольшее снижение от пика до минимума</td>
+                            <td><20% = Хорошо, <10% = Отлично, >30% = Рискованно</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Процент Успешных Сделок %</strong></td>
+                            <td>Процент прибыльных сделок</td>
+                            <td>>50% = Хорошо, >60% = Отлично</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Соотношение Средней Прибыли/Убытка</strong></td>
+                            <td>Средняя прибыль ÷ Средний убыток</td>
+                            <td>>1.5 = Хорошо, >2 = Отлично</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Стандартное Отклонение P&L</strong></td>
+                            <td>Волатильность доходности</td>
+                            <td>Ниже = Более стабильные результаты</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>📋 Статистика Сделок</h3>
+                    <table>
+                        <tr>
+                            <th>Метрика</th>
+                            <th>Описание</th>
+                            <th>Идеальный Диапазон</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Всего Сделок</strong></td>
+                            <td>Количество выполненных сделок</td>
+                            <td>Минимум 30 для статистической значимости</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Последовательные Прибыли/Убытки</strong></td>
+                            <td>Самая длинная серия прибылей/убытков</td>
+                            <td>Избегать >5 последовательных убытков</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Средняя Продолжительность Сделки</strong></td>
+                            <td>Средний период удержания позиции</td>
+                            <td>Зависит от таймфрейма стратегии</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Распределение Лонг/Шорт</strong></td>
+                            <td>Соотношение лонг и шорт сделок</td>
+                            <td>Сбалансированное или зависящее от рынка</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4. 🎯 Настройки Обнаружения Паттернов</h2>
+
+                <h3>Порог Обнаружения (0.0 - 1.0)</h3>
+                <ul>
+                    <li><strong>0.0</strong>: Максимальная чувствительность - обнаруживает больше паттернов (больше ложных сигналов)</li>
+                    <li><strong>0.5</strong>: По умолчанию - стандартный уровень обнаружения TA-Lib</li>
+                    <li><strong>1.0</strong>: Минимальная чувствительность - обнаруживает только самые сильные паттерны (меньше сигналов)</li>
+                </ul>
+
+                <div class="tip">
+                    <h4>💡 Рекомендация:</h4>
+                    <p>Начните с 0.5, затем корректируйте на основе результатов:
+                    <br>• Увеличивайте порог, если слишком много ложных сигналов
+                    <br>• Уменьшайте порог, если пропускаются валидные сигналы</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>5. 🛡️ Рекомендации по Управлению Рисками</h2>
+
+                <div class="tip">
+                    <h3>Рекомендации по Размеру Позиции</h3>
+                    <ul>
+                        <li><strong>Консервативно</strong>: 1-5% капитала на сделку</li>
+                        <li><strong>Умеренно</strong>: 5-10% капитала на сделку</li>
+                        <li><strong>Агрессивно</strong>: 10-20% капитала на сделку (не рекомендуется)</li>
+                        <li><strong>Максимум</strong>: Никогда не превышайте 25% в одной позиции</li>
+                    </ul>
+                    <p><strong>Формула:</strong> Размер позиции = (Капитал × Риск %) ÷ Цена входа</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Настройки Стоп-Лосса</h3>
+                    <ul>
+                        <li><strong>Внутридневная торговля (1m-1h)</strong>: 0.5-2.0%</li>
+                        <li><strong>Свинг-трейдинг (4h-1d)</strong>: 1.5-3.0%</li>
+                        <li><strong>Позиционная торговля (1w-1M)</strong>: 2.0-5.0%</li>
+                        <li><strong>Криптовалюты</strong>: Добавьте 0.5-1.0% к вышеуказанным значениям (высокая волатильность)</li>
+                    </ul>
+                    <p><strong>Расчет:</strong> Цена стоп-лосса = Цена входа × (1 - Стоп-лосс %)</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Настройки Тейк-Профита</h3>
+                    <table>
+                        <tr>
+                            <th>Соотношение Риск-Доходность</th>
+                            <th>Тейк-Профит %</th>
+                            <th>Минимальный % Успешных Сделок</th>
+                        </tr>
+                        <tr>
+                            <td>1:1</td>
+                            <td>Такой же как Стоп-Лосс</td>
+                            <td>>50%</td>
+                        </tr>
+                        <tr>
+                            <td>1:1.5</td>
+                            <td>1.5× Стоп-Лосс</td>
+                            <td>>40%</td>
+                        </tr>
+                        <tr>
+                            <td>1:2</td>
+                            <td>2× Стоп-Лосс</td>
+                            <td>>33%</td>
+                        </tr>
+                        <tr>
+                            <td>1:3</td>
+                            <td>3× Стоп-Лосс</td>
+                            <td>>25%</td>
+                        </tr>
+                    </table>
+                    <p><strong>Пример:</strong> При 2% стоп-лоссе и соотношении 1:2, тейк-профит = 4%</p>
+                </div>
+
+                <div class="tip">
+                    <h3>Временной Выход (Макс. свечей для удержания)</h3>
+                    <ul>
+                        <li><strong>Скальпинг (1m-5m)</strong>: 5-15 свечей</li>
+                        <li><strong>Дейт-трейдинг (15m-1h)</strong>: 10-30 свечей</li>
+                        <li><strong>Свинг-трейдинг (4h-1d)</strong>: 5-20 свечей</li>
+                        <li><strong>Позиционная торговля</strong>: 10-50 свечей</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="disclaimer">
+                <h2>⚠️ ВАЖНОЕ ОТВЕРЖДЕНИЕ ОТВЕТСТВЕННОСТИ</h2>
+                <p><strong>ТОРГОВЛЯ СВЯЗАНА С ЗНАЧИТЕЛЬНЫМ РИСКОМ ПОТЕРИ СРЕДСТВ</strong></p>
+
+                <h3>Предупреждения о Рисках:</h3>
+                <ul>
+                    <li>Это программное обеспечение предназначено <strong>ТОЛЬКО ДЛЯ ОБРАЗОВАТЕЛЬНЫХ И ИССЛЕДОВАТЕЛЬСКИХ ЦЕЛЕЙ</strong></li>
+                    <li><strong>ПРОШЛЫЕ РЕЗУЛЬТАТЫ НЕ ГАРАНТИРУЮТ БУДУЩИХ РЕЗУЛЬТАТОВ</strong></li>
+                    <li>Результаты бэктестинга теоретические и могут не отражать реальную торговлю</li>
+                    <li>Все торговые решения - ваша исключительная ответственность</li>
+                    <li>Никогда не торгуйте деньгами, которые не можете позволить себе потерять</li>
+                    <li>Учитывайте все риски, включая, но не ограничиваясь:
+                        <ul>
+                            <li>Рыночный риск</li>
+                            <li>Риск ликвидности</li>
+                            <li>Систематический риск</li>
+                            <li>Риск кредитного плеча</li>
+                            <li>Операционный риск</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Ограничения Бэктестинга:</h3>
+                <ul>
+                    <li><strong>Предвзятость задним числом</strong>: Анализ исторических данных может создавать нереалистичные ожидания</li>
+                    <li><strong>Предвзятость выжившего</strong>: В исторические данные включены только успешные активы</li>
+                    <li><strong>Переобучение</strong>: Стратегии могут работать только на исторических данных</li>
+                    <li><strong>Изменения рынка</strong>: Прошлые паттерны могут не повторяться</li>
+                    <li><strong>Проблемы исполнения</strong>: Проскальзывание, комиссии и ликвидность не полностью учитываются</li>
+                </ul>
+
+                <h3>Профессиональный Совет:</h3>
+                <p>Проконсультируйтесь с квалифицированным финансовым консультантом перед принятием любых инвестиционных решений.
+                Разработчики этого программного обеспечения не несут ответственности за любые финансовые потери, понесенные в результате его использования.</p>
+
+                <p style="text-align: center; font-weight: bold; color: #dc3545; margin-top: 15px;">
+                    ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК • НЕТ ГАРАНТИЙ • ТОЛЬКО ДЛЯ ОБРАЗОВАТЕЛЬНЫХ ЦЕЛЕЙ
+                </p>
+            </div>
+
+            <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;">
+                🤖 Разработано DeepSeek AI Assistant • 📅 Последнее обновление: Февраль 2026<br>
+                ⭐ Если вы находите это ПО полезным, пожалуйста, поставьте звезду!
+            </p>
+        </body>
+        </html>
+        """
+
+    def get_spanish_help_content(self):
+        """Spanish help content"""
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                h2 { color: #3498db; margin-top: 25px; }
+                h3 { color: #2980b9; margin-top: 20px; }
+                .section { margin-bottom: 30px; }
+                .metric { background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 15px 0; }
+                .tip { background: #e8f4fd; padding: 15px; border-left: 4px solid #2980b9; margin: 15px 0; }
+                .warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0; }
+                .disclaimer { background: #f8d7da; padding: 20px; border: 2px solid #dc3545; margin: 25px 0; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th { background: #3498db; color: white; padding: 12px; text-align: left; }
+                td { padding: 10px; border: 1px solid #ddd; }
+                tr:nth-child(even) { background: #f8f9fa; }
+                .highlight { background-color: #ffffcc; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 Sistema de Backtesting MOEX y Criptomonedas - Guía Completa</h1>
+
+            <div class="section">
+                <h2>1. 🎯 Descripción General de la Aplicación</h2>
+                <p>Esta aplicación permite realizar backtesting de estrategias de trading basadas en <strong>61 patrones de velas japonesas</strong> en los mercados de <strong>MOEX (mercado bursátil ruso)</strong> y <strong>Criptomonedas</strong>.</p>
+
+                <h3>Capacidades Clave:</h3>
+                <ul>
+                    <li>✅ Soporte multimercado (MOEX & Criptomonedas)</li>
+                    <li>✅ 61 patrones de velas de TA-Lib</li>
+                    <li>✅ Creación y gestión de estrategias personalizadas</li>
+                    <li>✅ Backtesting realista con comisiones y deslizamiento</li>
+                    <li>✅ Métricas de rendimiento completas</li>
+                    <li>✅ Visualización interactiva con Plotly</li>
+                    <li>✅ Almacenamiento en base de datos de estrategias y resultados</li>
+                    <li>✅ Soporte multilingüe (Inglés, Ruso, Español)</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>2. 🚀 Cómo Empezar</h2>
+
+                <h3>Paso 1: Crear una Estrategia</h3>
+                <ol>
+                    <li>Haga clic en <span class="highlight">"Nueva"</span> en la sección Gestión de Estrategias</li>
+                    <li>Asigne un nombre descriptivo a su estrategia</li>
+                    <li>Seleccione patrones para incluir (Ctrl+Click para selección múltiple)</li>
+                    <li>Elija regla de entrada:
+                        <ul>
+                            <li><strong>OPEN_NEXT_CANDLE</strong> - Entrada al precio de apertura de la siguiente vela</li>
+                            <li><strong>MIDDLE_OF_PATTERN</strong> - Entrada al precio medio del patrón</li>
+                            <li><strong>CLOSE_PATTERN</strong> - Entrada al precio de cierre del patrón</li>
+                        </ul>
+                    </li>
+                    <li>Elija regla de salida:
+                        <ul>
+                            <li><strong>STOP_LOSS_TAKE_PROFIT</strong> - Stop loss y take profit fijos</li>
+                            <li><strong>TAKE_PROFIT_ONLY</strong> - Solo take profit, sin stop loss</li>
+                            <li><strong>OPPOSITE_PATTERN</strong> - Salida cuando aparece patrón opuesto</li>
+                            <li><strong>TIMEBASED_EXIT</strong> - Salida después de número especificado de velas</li>
+                            <li><strong>TRAILING_STOP</strong> - Stop loss dinámico con seguimiento</li>
+                        </ul>
+                    </li>
+                    <li>Establezca parámetros de riesgo (ver sección 5 para recomendaciones)</li>
+                    <li>Haga clic en <span class="highlight">"Guardar"</span></li>
+                </ol>
+
+                <h3>Paso 2: Obtener Datos de Mercado</h3>
+                <ol>
+                    <li>Seleccione tipo de mercado: <strong>MOEX</strong> o <strong>Criptomoneda</strong></li>
+                    <li>Ingrese ticker/símbolo:
+                        <ul>
+                            <li>MOEX: SBER, GAZP, LKOH, etc.</li>
+                            <li>Criptomoneda: BTCUSDT, ETHUSDT, XRPUSDT, etc.</li>
+                        </ul>
+                    </li>
+                    <li>Elija marco temporal: 1m, 5m, 15m, 30m, 1h, 4h, 1d, 1w, 1M</li>
+                    <li>Establezca rango de fechas (mínimo 3 meses recomendado)</li>
+                    <li>Ajuste umbral de detección de patrones (predeterminado 0.5)</li>
+                    <li>Haga clic en <span class="highlight">"Obtener Datos"</span></li>
+                </ol>
+
+                <h3>Paso 3: Ejecutar Backtesting</h3>
+                <ol>
+                    <li>Seleccione su estrategia del menú desplegable</li>
+                    <li>Establezca parámetros de capital:
+                        <ul>
+                            <li>Capital Inicial (predeterminado: 1,000,000 RUB)</li>
+                            <li>Comisión % (predeterminado: 0.1%)</li>
+                            <li>Deslizamiento % (predeterminado: 0.1%)</li>
+                        </ul>
+                    </li>
+                    <li>Haga clic en <span class="highlight">"Ejecutar Backtesting"</span></li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>3. 📊 Explicación de Métricas de Rendimiento</h2>
+
+                <div class="metric">
+                    <h3>📈 Métricas de Rentabilidad</h3>
+                    <table>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Descripción</th>
+                            <th>Interpretación</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Retorno Total %</strong></td>
+                            <td>Retorno general sobre capital inicial</td>
+                            <td>Superior a 0% = rentable, Negativo = pérdida</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ratio de Sharpe</strong></td>
+                            <td>Retorno ajustado al riesgo (anualizado)</td>
+                            <td>>1 = Bueno, >2 = Excelente, <0 = Pobre</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Factor de Beneficio</strong></td>
+                            <td>Beneficio bruto ÷ Pérdida bruta</td>
+                            <td>>1.5 = Bueno, >2 = Excelente, <1 = Perdedor</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ROI Promedio por Operación</strong></td>
+                            <td>Retorno promedio por operación</td>
+                            <td>Indicador de consistencia</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>⚖️ Métricas de Riesgo</h3>
+                    <table>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Descripción</th>
+                            <th>Interpretación</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Drawdown Máximo %</strong></td>
+                            <td>Mayor caída de pico a valle</td>
+                            <td><20% = Bueno, <10% = Excelente, >30% = Arriesgado</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tasa de Aciertos %</strong></td>
+                            <td>Porcentaje de operaciones ganadoras</td>
+                            <td>>50% = Bueno, >60% = Excelente</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ratio Ganancia/Pérdida Promedio</strong></td>
+                            <td>Ganancia promedio ÷ Pérdida promedio</td>
+                            <td>>1.5 = Bueno, >2 = Excelente</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Desviación Estándar de P&L</strong></td>
+                            <td>Volatilidad de los retornos</td>
+                            <td>Más baja = Resultados más consistentes</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="metric">
+                    <h3>📋 Estadísticas de Operaciones</h3>
+                    <table>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Descripción</th>
+                            <th>Rango Ideal</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Total de Operaciones</strong></td>
+                            <td>Número de operaciones ejecutadas</td>
+                            <td>Mínimo 30 para significancia estadística</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ganadas/Perdidas Consecutivas</strong></td>
+                            <td>Racha más larga de ganancias/pérdidas</td>
+                            <td>Evitar >5 pérdidas consecutivas</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Duración Promedio de Operación</strong></td>
+                            <td>Período promedio de mantenimiento de posición</td>
+                            <td>Depende del marco temporal de la estrategia</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Distribución Largo/Corto</strong></td>
+                            <td>Proporción de operaciones largas vs cortas</td>
+                            <td>Equilibrada o dependiente del mercado</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="disclaimer">
+                <h2>⚠️ DECLARACIÓN DE EXENCIÓN DE RESPONSABILIDAD IMPORTANTE</h2>
+                <p><strong>EL TRADING CONLLEVA UN RIESGO SIGNIFICATIVO DE PÉRDIDA</strong></p>
+
+                <h3>Advertencias de Riesgo:</h3>
+                <ul>
+                    <li>Este software es <strong>SÓLO PARA FINES EDUCATIVOS Y DE INVESTIGACIÓN</strong></li>
+                    <li><strong>LOS RESULTADOS PASADOS NO GARANTIZAN RESULTADOS FUTUROS</strong></li>
+                    <li>Los resultados de backtesting son teóricos y pueden no reflejar el trading real</li>
+                    <li>Todas las decisiones de trading son su exclusiva responsabilidad</li>
+                    <li>Nunca opere con dinero que no pueda permitirse perder</li>
+                    <li>Considere todos los riesgos, incluyendo, entre otros:
+                        <ul>
+                            <li>Riesgo de mercado</li>
+                            <li>Riesgo de liquidez</li>
+                            <li>Riesgo sistemático</li>
+                            <li>Riesgo de apalancamiento</li>
+                            <li>Riesgo operativo</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Limitaciones del Backtesting:</h3>
+                <ul>
+                    <li><strong>Sesgo de retrospectiva</strong>: El análisis de datos históricos puede crear expectativas poco realistas</li>
+                    <li><strong>Sesgo de supervivencia</strong>: Solo se incluyen activos exitosos en datos históricos</li>
+                    <li><strong>Sobreajuste</strong>: Las estrategias pueden funcionar solo en datos históricos</li>
+                    <li><strong>Cambios de mercado</strong>: Los patrones pasados pueden no repetirse</li>
+                    <li><strong>Problemas de ejecución</strong>: Deslizamiento, comisiones y liquidez no se capturan completamente</li>
+                </ul>
+
+                <h3>Consejo Profesional:</h3>
+                <p>Consulte con un asesor financiero calificado antes de tomar cualquier decisión de inversión.
+                Los desarrolladores de este software no son responsables de ninguna pérdida financiera incurrida por su uso.</p>
+
+                <p style="text-align: center; font-weight: bold; color: #dc3545; margin-top: 15px;">
+                    ÚSELO BAJO SU PROPIO RIESGO • SIN GARANTÍAS • SÓLO PARA FINES EDUCATIVOS
+                </p>
+            </div>
+
+            <p style="text-align: center; margin-top: 30px; color: #666; font-style: italic;">
+                🤖 Desarrollado por DeepSeek AI Assistant • 📅 Última actualización: Febrero 2026<br>
+                ⭐ Si encuentra útil este software, ¡por favor dé una estrella!
+            </p>
+        </body>
+        </html>
+        """
+
+    def get_close_text(self):
+        """Get translated close text"""
+        lang = self.language_manager.current_language
+        if lang == "russian":
+            return "Закрыть"
+        elif lang == "spanish":
+            return "Cerrar"
+        else:
+            return "Close"
